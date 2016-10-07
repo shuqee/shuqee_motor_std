@@ -34,6 +34,10 @@
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
+#include "user_config.h"
+#include "user_io.h"
+#include "user_time.h"
+#include "user_uart.h"
 
 /* USER CODE END Includes */
 
@@ -49,30 +53,8 @@ UART_HandleTypeDef huart1;
 
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
-#define UART_BUFF_SIZE 20
-struct high
-{
-		uint32_t now;
-		uint32_t set;
-};
 
-struct motion
-{
-		struct high high;
-		uint16_t speed;
-		uint8_t dir;
-};
-
-struct motion motion = {{0,0},0,0};
-
-struct frame
-{
-		uint8_t enable;
-		uint8_t data;
-		uint8_t buff[UART_BUFF_SIZE];
-};
-
-struct frame frame = {1};
+struct motion motion[3] = {0};
 
 /* USER CODE END PV */
 
@@ -144,64 +126,25 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	HAL_GPIO_WritePin(OUTPUT_573LE1_GPIO_Port, OUTPUT_573LE1_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(OUTPUT_573LE2_GPIO_Port, OUTPUT_573LE2_Pin, GPIO_PIN_SET);
-	HAL_GPIO_WritePin(OUTPUT_573LE3_GPIO_Port, OUTPUT_573LE3_Pin, GPIO_PIN_SET);
-	__HAL_TIM_SET_AUTORELOAD(&htim1, 200);
-	HAL_TIM_Base_Start_IT(&htim1);
-	HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);
-	HAL_UART_Receive_IT(&huart1, &(frame.data), 1);
+	user_io_init();
+	user_time_init();
+	user_uart_init();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-	int i,j;
   while (1)
   {
   /* USER CODE END WHILE */
-#if 0
-	if(frame.enable)
-	{
-		frame.enable = 0;
-		for(j=0; j<1; j++)
-		{
-			HAL_Delay(100);
-			HAL_GPIO_WritePin(OUTPUT_DIR1_GPIO_Port, OUTPUT_DIR1_Pin, GPIO_PIN_RESET);
-			HAL_Delay(100);
-			for(i=1000; i>0; i--)
-			{
-				HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_RESET);
-				//delay_ns(10);
-				delay_us(i/5+1);
-				HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_SET);
-				delay_us(i/5+1);
-				//HAL_Delay(1);
-			}
-			HAL_Delay(100);
-			HAL_GPIO_WritePin(OUTPUT_DIR1_GPIO_Port, OUTPUT_DIR1_Pin, GPIO_PIN_SET);
-			HAL_Delay(100);
-			HAL_Delay(5000);
-			for(i=1000; i>0; i--)
-			{
-				HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_RESET);
-				//delay_ns(10);
-				delay_us(i/5+1);
-				HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_SET);
-				delay_us(i/5+1);
-				//HAL_Delay(1);
-			}
-			
-		}
-	}
-#endif
+
   /* USER CODE BEGIN 3 */
 		
 		HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, GPIO_PIN_SET);
-		//HAL_Delay(1000);
-		delay_ms(1000);
-		HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, 0);
-		//HAL_Delay(1000);
-		delay_ms(1000);
+		HAL_Delay(1000);
+		//delay_ms(1000);
+		HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, GPIO_PIN_RESET);
+		HAL_Delay(1000);
+		//delay_ms(1000);
   }
   /* USER CODE END 3 */
 
@@ -495,59 +438,6 @@ void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
-
-int output_pul1(GPIO_PinState sign)
-{
-	static uint8_t status = 0;
-	static GPIO_PinState dir = GPIO_PIN_RESET;
-	switch(status)
-	{
-		case 0:
-			HAL_GPIO_WritePin(OUTPUT_DIR1_GPIO_Port, OUTPUT_DIR1_Pin, sign);
-			if(dir != sign)
-			{
-				dir = sign;
-				return 0;
-			}
-			HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_RESET);
-			status++;
-			return 0;
-		case 1:
-			HAL_GPIO_WritePin(OUTPUT_PUL1_GPIO_Port, OUTPUT_PUL1_Pin, GPIO_PIN_SET);
-			status = 0;
-			return (dir?-1:1);
-		default:
-			status = 0;
-			return 0;
-	}
-}
-
-void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
-{
-	uint32_t speed = 0;
-	if(htim->Instance == TIM1)
-	{
-		if(motion.high.now == motion.high.set)
-			return;
-		if(motion.high.now < motion.high.set)
-			speed = 0xffff/(motion.high.set-motion.high.now);
-		else
-			speed = 0xffff/(motion.high.now-motion.high.set);
-		speed = (speed<27)?27:speed;
-			__HAL_TIM_SET_AUTORELOAD(&htim1, speed);
-		motion.high.now += output_pul1((motion.high.now < motion.high.set)?GPIO_PIN_RESET:GPIO_PIN_SET);
-	}
-}
-
-void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
-{
-		__set_PRIMASK(1);
-		frame.enable = 1;
-		motion.high.set = frame.data<<6;
-		__set_PRIMASK(0);
-		HAL_UART_Receive_IT(&huart1, &(frame.data), 1);
-	HAL_GPIO_TogglePin(OUTPUT_SEATLED3_GPIO_Port, OUTPUT_SEATLED3_Pin);
-}
 
 /* USER CODE END 4 */
 
