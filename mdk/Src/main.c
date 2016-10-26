@@ -55,6 +55,7 @@ UART_HandleTypeDef huart1;
 /* Private variables ---------------------------------------------------------*/
 
 struct motion motion[3] = {0};
+struct status status = {0};
 
 /* USER CODE END PV */
 
@@ -105,7 +106,11 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
+	static int led_count = 0;
+	static uint8_t send_seat = 0;
+	static uint8_t send_buf[4] = {0xff,0xc1};
+	static int send_index = 0;
+	uint8_t update;
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -126,6 +131,9 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
+	motion[0].index = 0;
+	motion[1].index = 1;
+	motion[2].index = 2;
 	user_io_init();
 	user_time_init();
 	user_uart_init();
@@ -138,13 +146,83 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-		
-		HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, GPIO_PIN_SET);
-		HAL_Delay(1000);
-		//delay_ms(1000);
-		HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, GPIO_PIN_RESET);
-		HAL_Delay(1000);
-		//delay_ms(1000);
+	SAFE(update = frame.enable);
+	if(update)
+	{
+		SAFE(frame.enable = 0);
+		/*LED_START*/
+		led_count++;
+		led_count = led_count%10;
+		if(led_count == 0)
+		{
+			LED_TOGGLE();
+		}
+		/*LED_END*/
+		/*SEAT_START*/
+		if(status.seat_enable)//座椅使能
+		{
+			SAFE(motion[0].high.set = frame.buff[2]<<6);//更新目标位置
+			SAFE(motion[1].high.set = frame.buff[3]<<6);//更新目标位置
+			SAFE(motion[2].high.set = frame.buff[4]<<6);//更新目标位置
+			SAFE(status.spb = frame.buff[5]);//更新特效
+		}
+		status.id = 0;//更新id
+		if(GET_ID_1())
+			status.id = status.id + 1;
+		if(GET_ID_2())
+			status.id = status.id + 2;
+		if(GET_ID_4())
+			status.id = status.id + 4;
+		if(GET_ID_8())
+			status.id = status.id + 8;
+		if(GET_ID_10())
+			status.id = status.id + 10;
+		if(GET_ID_20())
+			status.id = status.id + 20;
+		if(GET_ID_40())
+			status.id = status.id + 40;
+		if(GET_ID_80())
+			status.id = status.id + 80;
+		if(frame.buff[7] == status.id)//判断座椅编号
+		{
+			send_seat = 1;
+			send_buf[2] = status.id;
+			SAFE(send_buf[3] = status.seat_num);
+		}
+		/*SEAT_END*/
+	}
+	/*SEND_SEAT_START*/
+	if(send_seat)
+	{
+		if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
+		{
+			huart1.Instance->DR = send_buf[send_index];
+			send_index++;
+		}
+		if(send_index == 4)
+		{
+			send_index = 0;
+			send_seat = 0;
+		}
+	}
+	/*SEND_SEAT_END*/
+	/*SPB_START*/
+	status.seat_enable = GET_SEAT_ENABLE();
+	SAFE(status.seat_enable += status.seat_num);
+	if(!status.seat_enable)//座椅未使能
+	{
+		status.spb = 0;
+		SAFE(motion[0].high.set = 0<<6);
+		SAFE(motion[1].high.set = 0<<6);
+		SAFE(motion[2].high.set = 0<<6);
+	}
+	SPB3(status.spb&(1<<2));
+	SPB4(status.spb&(1<<3));
+	SPB5(status.spb&(1<<4));
+	SPB6(status.spb&(1<<5));
+	SPB7(status.spb&(1<<6));
+	SPB8(status.spb&(1<<7));
+	/*SPB_END*/
   }
   /* USER CODE END 3 */
 

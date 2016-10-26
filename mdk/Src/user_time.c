@@ -4,8 +4,12 @@
 
 void user_time_init(void)
 {
-	__HAL_TIM_SET_AUTORELOAD(&htim1, 200);
+	__HAL_TIM_SET_AUTORELOAD(&htim1, 999);
 	HAL_TIM_Base_Start_IT(&htim1);
+	__HAL_TIM_SET_AUTORELOAD(&htim2, 999);
+	HAL_TIM_Base_Start_IT(&htim2);
+	__HAL_TIM_SET_AUTORELOAD(&htim3, 999);
+	HAL_TIM_Base_Start_IT(&htim3);
 }
 
 int output_pul(struct motion *pmotion, GPIO_PinState sign)
@@ -51,10 +55,20 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	uint32_t speed = 0;
 	if(htim->Instance == TIM1)
 		pmotion = &motion[0];
+	else{if(htim->Instance == TIM2)
+		pmotion = &motion[1];
+	else{if(htim->Instance == TIM3)
+		pmotion = &motion[2];
+	else
+		return;
+	}}
 	now = pmotion->high.now;
 	set = pmotion->high.set;
 	if(now == set)
+	{
+		__HAL_TIM_SET_AUTORELOAD(htim, 999);
 		return;
+	}
 	if(now < set)
 		speed = 0xffff/(set-now);
 	else
