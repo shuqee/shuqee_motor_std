@@ -62,7 +62,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	else
 		return;
 	}}
-	now = pmotion->high.now;
+	SAFE(now = pmotion->high.now);
 	set = pmotion->high.set;
 	if(now == set)
 	{
@@ -70,10 +70,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		return;
 	}
 	if(now < set)
-		speed = 0xffff/(set-now);
+		speed = (0xffff)/(set-now);
 	else
-		speed = 0xffff/(now-set);
-	speed = (speed<27)?27:speed;
+		speed =  (0xffff)/(now-set);
+	speed = (speed<ENV_SPEED_MAX)?ENV_SPEED_MAX:speed;
 	__HAL_TIM_SET_AUTORELOAD(htim, speed);
-	pmotion->high.now += output_pul(pmotion, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET);
+	SAFE(pmotion->high.now += output_pul(pmotion, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET));
 }

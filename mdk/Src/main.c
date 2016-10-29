@@ -161,9 +161,9 @@ int main(void)
 		/*SEAT_START*/
 		if(status.seat_enable)//座椅使能
 		{
-			SAFE(motion[0].high.set = frame.buff[2]<<6);//更新目标位置
-			SAFE(motion[1].high.set = frame.buff[3]<<6);//更新目标位置
-			SAFE(motion[2].high.set = frame.buff[4]<<6);//更新目标位置
+			SAFE(motion[0].high.set = frame.buff[2]<<ENV_SPACE);//更新目标位置
+			SAFE(motion[1].high.set = frame.buff[3]<<ENV_SPACE);//更新目标位置
+			SAFE(motion[2].high.set = frame.buff[4]<<ENV_SPACE);//更新目标位置
 			SAFE(status.spb = frame.buff[5]);//更新特效
 		}
 		status.id = 0;//更新id
@@ -212,9 +212,9 @@ int main(void)
 	if(!status.seat_enable)//座椅未使能
 	{
 		status.spb = 0;
-		SAFE(motion[0].high.set = 0<<6);
-		SAFE(motion[1].high.set = 0<<6);
-		SAFE(motion[2].high.set = 0<<6);
+		SAFE(motion[0].high.set = 0<<ENV_SPACE);
+		SAFE(motion[1].high.set = 0<<ENV_SPACE);
+		SAFE(motion[2].high.set = 0<<ENV_SPACE);
 	}
 	SPB3(status.spb&(1<<2));
 	SPB4(status.spb&(1<<3));
@@ -223,6 +223,15 @@ int main(void)
 	SPB7(status.spb&(1<<6));
 	SPB8(status.spb&(1<<7));
 	/*SPB_END*/
+	int debug;
+	int exit_count;
+	SAFE(debug = status.debug);
+	if(debug)
+	{
+		SAFE(status.debug = 0);
+		SAFE(exit_count = status.exit_count);
+		printf("%d\r\n",exit_count);
+	}
   }
   /* USER CODE END 3 */
 
@@ -442,11 +451,11 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EXTI_UPLIMIT1_Pin EXTI_DOWNLIMIT2_Pin EXTI_UPLIMIT2_Pin EXTI_DOWNLIMIT2C3_Pin 
+  /*Configure GPIO pins : EXTI_UPLIMIT1_Pin EXTI_DOWNLIMIT1_Pin EXTI_UPLIMIT2_Pin EXTI_DOWNLIMIT2_Pin 
                            EXTI_UPLIMIT3_Pin EXTI_DOWNLIMIT3_Pin */
-  GPIO_InitStruct.Pin = EXTI_UPLIMIT1_Pin|EXTI_DOWNLIMIT2_Pin|EXTI_UPLIMIT2_Pin|EXTI_DOWNLIMIT2C3_Pin 
+  GPIO_InitStruct.Pin = EXTI_UPLIMIT1_Pin|EXTI_DOWNLIMIT1_Pin|EXTI_UPLIMIT2_Pin|EXTI_DOWNLIMIT2_Pin 
                           |EXTI_UPLIMIT3_Pin|EXTI_DOWNLIMIT3_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 

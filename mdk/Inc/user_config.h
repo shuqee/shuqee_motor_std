@@ -3,6 +3,23 @@
 
 #include "stm32f1xx_hal.h"
 
+#define ENV_3DOF
+
+#ifndef ENV_3DOF
+	#define ENV_2DOF
+#endif
+
+#define ENV_MY_TEST
+
+#ifndef ENV_MY_TEST
+	#define ENV_SPACE 6
+	#define ENV_SPEED_MAX 27
+#else
+	#define ENV_SPACE 4
+	#define ENV_SPEED_MAX 35
+#endif
+
+
 #define SAFE(x) do{ \
 	__set_PRIMASK(1); \
 	x; \
@@ -28,6 +45,14 @@ struct status
 	uint8_t seat_num;//座椅人数
 	uint8_t seat_enable;//座椅使能位(seat_num||seat_enable为真座椅动作)
 	uint8_t spb;//座椅特效
+	uint8_t uplimit1;
+	uint8_t downlimit1;
+	uint8_t uplimit2;
+	uint8_t downlimit2;
+	uint8_t uplimit3;
+	uint8_t downlimit3;
+	int debug;
+	int exit_count;
 };
 
 extern TIM_HandleTypeDef htim1;
