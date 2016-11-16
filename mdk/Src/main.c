@@ -194,6 +194,7 @@ int main(void)
 	/*SEND_SEAT_START*/
 	if(send_seat)
 	{
+		HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发送
 		if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 		{
 			huart1.Instance->DR = send_buf[send_index];
@@ -204,6 +205,11 @@ int main(void)
 			send_index = 0;
 			send_seat = 0;
 		}
+	}
+	else
+	{
+		if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);//485接收
 	}
 	/*SEND_SEAT_END*/
 	/*SPB_START*/

@@ -84,6 +84,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 	switch(GPIO_Pin)
 	{
 		case EXTI_UPLIMIT1_Pin:
+			if(GET_UPLIMIT1())
+			{
+				HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_RESET);//禁止上升
+			}
+			else
+			{
+				HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_SET);//允许上升
+				motion[0].high.now = 0xff << ENV_SPACE;
+			}
+			break;
 			//if(GET_UPLIMIT1())
 			//{
 				//if(!status.uplimit1)
@@ -104,9 +114,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 					//printf("up\r\n");
 				//}
 			//}
-			break;
+			//break;
 		case EXTI_DOWNLIMIT1_Pin:
-			//printf("down1\r\n");
+			if(GET_DOWNLIMIT1())
+			{
+				HAL_GPIO_WritePin(OUTPUT_NDOWN1_GPIO_Port, OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);//禁止下降
+			}
+			else
+			{
+				HAL_GPIO_WritePin(OUTPUT_NDOWN1_GPIO_Port, OUTPUT_NDOWN1_Pin, GPIO_PIN_SET);//允许下降
+				motion[0].high.now = 0 << ENV_SPACE;
+			}
 			break;
 		case EXTI_UPLIMIT2_Pin:
 			if(GET_UPLIMIT2())
@@ -131,10 +149,26 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 			}
 			break;
 		case EXTI_UPLIMIT3_Pin:
-			//printf("up3\r\n");
+			if(GET_UPLIMIT3())
+			{
+				HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_RESET);//禁止上升
+			}
+			else
+			{
+				HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_SET);//允许上升
+				motion[2].high.now = 0xff << ENV_SPACE;
+			}
 			break;
 		case EXTI_DOWNLIMIT3_Pin:
-			//printf("down3\r\n");
+			if(GET_DOWNLIMIT3())
+			{
+				HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_RESET);//禁止下降
+			}
+			else
+			{
+				HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_SET);//允许下降
+				motion[2].high.now = 0 << ENV_SPACE;
+			}
 			break;
 		default:
 			break;
