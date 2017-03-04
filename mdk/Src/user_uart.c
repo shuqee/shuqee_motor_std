@@ -7,19 +7,18 @@ struct frame frame = {0};
 
 void user_uart_init(void)
 {
-	HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);
+	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);	//串口接收一个字节，并通过中断返回结果
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-	if(frame.index == 0 && frame.data == 0xff)
+	if(frame.index == 0 && frame.data == 0xff)	//判定帧头0xff
 	{
 		frame.index++;
 		HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);
 		return;
 	}
-	if(frame.index == 1)
+	if(frame.index == 1)	//判定帧头0xc2
 	{
 		switch (frame.data)
 		{
@@ -35,7 +34,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 		HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);
 		return;
 	}
-	if(frame.index >= 8)
+	if(frame.index >= 8)	//判定帧尾0xee
 	{
 		switch (frame.data)
 		{

@@ -56,6 +56,7 @@ UART_HandleTypeDef huart1;
 
 struct motion motion[3] = {0};
 struct status status = {0};
+int flag_rst = 0;	//复位标志
 
 /* USER CODE END PV */
 
@@ -100,6 +101,61 @@ void delay_ms(uint32_t times)
 		delay_us(1000);
 }
 
+#ifdef ENV_NOSENSOR
+void find_origin(void)	//复位函数
+{
+	int i = 0;
+	int def_high[3] = {0};
+//	static GPIO_TypeDef *ndown_port[3] = {OUTPUT_NDOWN1_GPIO_Port,OUTPUT_NDOWN2_GPIO_Port,OUTPUT_NDOWN3_GPIO_Port};
+//	static uint16_t ndown_pin[3] = {OUTPUT_NDOWN1_Pin,OUTPUT_NDOWN2_Pin,OUTPUT_NDOWN3_Pin};
+	for(i=0; i<3; i++)
+		flag_rst |= 1<<i;	//初始化复位标志(缸对应位初始值为1，复位后缸对应位清0)
+	while(flag_rst)	//仍有缸未复位
+	{
+		for(i=0; i<3; i++)
+		{
+			if((flag_rst&(1<<i)) != 0)	//未复位
+			{
+				if(def_high[i] == 0 && status.downlimit[i] == 0)	//缸未到底
+					set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+				if(def_high[i] == 0 && status.downlimit[i] == 1)	//缸到底
+				{
+					def_high[i] = 0x10 * ENV_SPACE;	//开始往上
+				}
+				if(def_high[i] != 0)
+				{
+					set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+					def_high[i]--;
+					if(def_high[i] == 0)	//运动到指定位置
+					{
+						flag_rst &= ~(1<<i);	//标志复位完成
+					}
+				}
+			}
+		}
+	}
+}
+
+void free_ndown(void)
+{
+	if(motion[0].high.now >= 0)
+		HAL_GPIO_WritePin(OUTPUT_NDOWN1_GPIO_Port, OUTPUT_NDOWN1_Pin, GPIO_PIN_SET);//允许下降
+	if(motion[1].high.now >= 0)
+		HAL_GPIO_WritePin(OUTPUT_NDOWN2_GPIO_Port, OUTPUT_NDOWN2_Pin, GPIO_PIN_SET);//允许下降
+	if(motion[2].high.now >= 0)
+		HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_SET);//允许下降
+}
+void free_nup(void)
+{
+	if(motion[0].high.now <= 255)
+		HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_SET);//允许上升
+	if(motion[1].high.now <= 255)
+		HAL_GPIO_WritePin(OUTPUT_NUP2_GPIO_Port, OUTPUT_NUP2_Pin, GPIO_PIN_SET);//允许上升
+	if(motion[2].high.now <= 255)
+		HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_SET);//允许上升
+}
+#endif
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -108,9 +164,9 @@ int main(void)
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
 	static uint8_t send_seat = 0;
-	static uint8_t send_buf[4] = {0xff,0xc1};
+	static uint8_t send_buf[4] = {0xff,0xc1};	//回复帧头
 	static int send_index = 0;
-	uint8_t update;
+	uint8_t update;										//串口数据更新标志
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -131,12 +187,14 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	motion[0].index = 0;
+	motion[0].index = 0;	//初始化缸索引值
 	motion[1].index = 1;
 	motion[2].index = 2;
 	user_io_init();
+	find_origin();
 	user_time_init();
 	user_uart_init();
+		
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -146,8 +204,12 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
+	status.seat_enable = GET_SEAT_ENABLE();
+	SAFE(status.seat_enable += status.seat_num);
 	SAFE(update = frame.enable);
-	if(update)
+	SAFE(free_ndown());
+	  SAFE(free_nup());
+	if(update)	//串口数据更新
 	{
 		SAFE(frame.enable = 0);
 		/*LED_START*/
@@ -155,15 +217,15 @@ int main(void)
 		led_count = led_count%10;
 		if(led_count == 0)
 		{
-			LED_TOGGLE();
+			LED_TOGGLE();	//闪烁指示灯
 		}
 		/*LED_END*/
 		/*SEAT_START*/
 		if(status.seat_enable)//座椅使能
 		{
-			SAFE(motion[0].high.set = frame.buff[2]<<ENV_SPACE);//更新目标位置
-			SAFE(motion[1].high.set = frame.buff[3]<<ENV_SPACE);//更新目标位置
-			SAFE(motion[2].high.set = frame.buff[4]<<ENV_SPACE);//更新目标位置
+			SAFE(motion[0].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
+			SAFE(motion[1].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
+			SAFE(motion[2].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
 			SAFE(status.spb = frame.buff[5]);//更新特效
 		}
 		status.id = 0;//更新id
@@ -213,31 +275,25 @@ int main(void)
 	}
 	/*SEND_SEAT_END*/
 	/*SPB_START*/
-	status.seat_enable = GET_SEAT_ENABLE();
-	SAFE(status.seat_enable += status.seat_num);
 	if(!status.seat_enable)//座椅未使能
 	{
-		status.spb = 0;
-		SAFE(motion[0].high.set = 0<<ENV_SPACE);
-		SAFE(motion[1].high.set = 0<<ENV_SPACE);
-		SAFE(motion[2].high.set = 0<<ENV_SPACE);
+		status.spb = 0;	//关闭全部特效
+		SAFE(motion[0].high.set = 0 * ENV_SPACE);	//设置缸目标位置为0
+		SAFE(motion[1].high.set = 0 * ENV_SPACE);
+		SAFE(motion[2].high.set = 0 * ENV_SPACE);
 	}
-	SPB3(status.spb&(1<<2));
+	SPB3(status.spb&(1<<2));	//更新特效到IO输出
 	SPB4(status.spb&(1<<3));
 	SPB5(status.spb&(1<<4));
 	SPB6(status.spb&(1<<5));
 	SPB7(status.spb&(1<<6));
 	SPB8(status.spb&(1<<7));
 	/*SPB_END*/
-	int debug;
-	int exit_count;
-	SAFE(debug = status.debug);
-	if(debug)
-	{
-		SAFE(status.debug = 0);
-		SAFE(exit_count = status.exit_count);
-		printf("%d\r\n",exit_count);
-	}
+	/*RST_START*/
+	if (status.spb&0x01)
+		SAFE( HAL_NVIC_SystemReset() );
+	/*RST_END*/
+	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
   }
   /* USER CODE END 3 */
 
