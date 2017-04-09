@@ -39,6 +39,8 @@
 #include "user_time.h"
 #include "user_uart.h"
 
+#include <string.h>
+
 /* USER CODE END Includes */
 
 /* Private variables ---------------------------------------------------------*/
@@ -54,7 +56,7 @@ UART_HandleTypeDef huart1;
 /* USER CODE BEGIN PV */
 /* Private variables ---------------------------------------------------------*/
 
-struct motion motion[3] = {0};
+struct motion_status motion[MOTION_COUNT] = {MOTION1};
 struct status status = {0};
 int flag_rst = 0;	//复位标志
 
@@ -101,18 +103,16 @@ void delay_ms(uint32_t times)
 		delay_us(1000);
 }
 
-#ifdef ENV_NOSENSOR
+#ifdef ENV_RESET
 void find_origin(void)	//复位函数
 {
-	int i = 0;
-	int def_high[3] = {0};
-//	static GPIO_TypeDef *ndown_port[3] = {OUTPUT_NDOWN1_GPIO_Port,OUTPUT_NDOWN2_GPIO_Port,OUTPUT_NDOWN3_GPIO_Port};
-//	static uint16_t ndown_pin[3] = {OUTPUT_NDOWN1_Pin,OUTPUT_NDOWN2_Pin,OUTPUT_NDOWN3_Pin};
-	for(i=0; i<3; i++)
+	enum motion_num i;
+	int def_high[MOTION_COUNT] = {0};
+	for(i=MOTION1; i<MOTION_COUNT; i++)
 		flag_rst |= 1<<i;	//初始化复位标志(缸对应位初始值为1，复位后缸对应位清0)
 	while(flag_rst)	//仍有缸未复位
 	{
-		for(i=0; i<3; i++)
+		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
 			if((flag_rst&(1<<i)) != 0)	//未复位
 			{
@@ -120,7 +120,10 @@ void find_origin(void)	//复位函数
 					set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
 				if(def_high[i] == 0 && status.downlimit[i] == 1)	//缸到底
 				{
-					def_high[i] = 0x10 * ENV_SPACE;	//开始往上
+					if (motion[i].config.adj == 0) /* 不需要校正 */
+						flag_rst &= ~(1<<i);	//标志复位完成
+					else
+						def_high[i] = motion[i].config.adj * ENV_SPACE;	//开始往上
 				}
 				if(def_high[i] != 0)
 				{
@@ -135,24 +138,111 @@ void find_origin(void)	//复位函数
 		}
 	}
 }
+#endif
 
+void exchange_nup_ndown(enum motion_num index)
+{
+	GPIO_TypeDef * temp_port;
+	uint16_t temp_pin;
+	temp_port = motion[index].io.nup_port;
+	temp_pin = motion[index].io.nup_pin;
+	motion[index].io.nup_port = motion[index].io.ndown_port;
+	motion[index].io.nup_pin = motion[index].io.ndown_pin;
+	motion[index].io.ndown_port = temp_port;
+	motion[index].io.ndown_pin = temp_pin;
+}
+
+void user_motion_init(void)
+{
+	enum motion_num i;
+	memset((void *)motion, 0, sizeof(motion));
+	
+	motion[MOTION1].io.dir_port = OUTPUT_DIR1_GPIO_Port;
+	motion[MOTION1].io.dir_pin = OUTPUT_DIR1_Pin;
+	motion[MOTION1].io.pul_port = OUTPUT_PUL1_GPIO_Port;
+	motion[MOTION1].io.pul_pin = OUTPUT_PUL1_Pin;
+	motion[MOTION1].io.nup_port = OUTPUT_NUP1_GPIO_Port;
+	motion[MOTION1].io.nup_pin = OUTPUT_NUP1_Pin;
+	motion[MOTION1].io.ndown_port = OUTPUT_NDOWN1_GPIO_Port;
+	motion[MOTION1].io.ndown_pin = OUTPUT_NDOWN1_Pin;
+	motion[MOTION2].io.dir_port = OUTPUT_DIR2_GPIO_Port;
+	motion[MOTION2].io.dir_pin = OUTPUT_DIR2_Pin;
+	motion[MOTION2].io.pul_port = OUTPUT_PUL2_GPIO_Port;
+	motion[MOTION2].io.pul_pin = OUTPUT_PUL2_Pin;
+	motion[MOTION2].io.nup_port = OUTPUT_NUP2_GPIO_Port;
+	motion[MOTION2].io.nup_pin = OUTPUT_NUP2_Pin;
+	motion[MOTION2].io.ndown_port = OUTPUT_NDOWN2_GPIO_Port;
+	motion[MOTION2].io.ndown_pin = OUTPUT_NDOWN2_Pin;
+	motion[MOTION3].io.dir_port = OUTPUT_DIR3_GPIO_Port;
+	motion[MOTION3].io.dir_pin = OUTPUT_DIR3_Pin;
+	motion[MOTION3].io.pul_port = OUTPUT_PUL3_GPIO_Port;
+	motion[MOTION3].io.pul_pin = OUTPUT_PUL3_Pin;
+	motion[MOTION3].io.nup_port = OUTPUT_NUP3_GPIO_Port;
+	motion[MOTION3].io.nup_pin = OUTPUT_NUP3_Pin;
+	motion[MOTION3].io.ndown_port = OUTPUT_NDOWN3_GPIO_Port;
+	motion[MOTION3].io.ndown_pin = OUTPUT_NDOWN3_Pin;
+	
+	motion[MOTION1].config.dir = MOTION1_CONFIG_DIR;
+	motion[MOTION2].config.dir = MOTION2_CONFIG_DIR;
+	motion[MOTION3].config.dir = MOTION3_CONFIG_DIR;
+	
+	motion[MOTION1].config.origin = MOTION1_CONFIG_ORIGIN;
+	motion[MOTION2].config.origin = MOTION2_CONFIG_ORIGIN;
+	motion[MOTION3].config.origin = MOTION3_CONFIG_ORIGIN;
+	
+	motion[MOTION1].config.adj = MOTION1_CONFIG_ADJ;
+	motion[MOTION2].config.adj = MOTION2_CONFIG_ADJ;
+	motion[MOTION3].config.adj = MOTION3_CONFIG_ADJ;
+	
+	for (i=MOTION1; i<MOTION_COUNT; i++)
+	{
+		motion[i].index = i;
+		motion[i].high.set = motion[i].config.origin * ENV_SPACE;
+		if (motion[i].config.dir == GPIO_PIN_SET) /* 如果脉冲方向取反 */
+			exchange_nup_ndown(i); /* 正反转禁止对应引脚取反 */
+	}
+#ifdef ENV_RESET
+	find_origin();
+#endif
+}
+
+#ifdef ENV_NOSENSOR
 void free_ndown(void)
 {
-	if(motion[0].high.now >= 0)
-		HAL_GPIO_WritePin(OUTPUT_NDOWN1_GPIO_Port, OUTPUT_NDOWN1_Pin, GPIO_PIN_SET);//允许下降
-	if(motion[1].high.now >= 0)
-		HAL_GPIO_WritePin(OUTPUT_NDOWN2_GPIO_Port, OUTPUT_NDOWN2_Pin, GPIO_PIN_SET);//允许下降
-	if(motion[2].high.now >= 0)
-		HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_SET);//允许下降
+	enum motion_num i;
+	for (i=MOTION1; i<MOTION_COUNT; i++)
+	{
+		if (motion[i].high.now >= 0 * ENV_SPACE)
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
+	}
 }
 void free_nup(void)
 {
-	if(motion[0].high.now <= 255)
-		HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_SET);//允许上升
-	if(motion[1].high.now <= 255)
-		HAL_GPIO_WritePin(OUTPUT_NUP2_GPIO_Port, OUTPUT_NUP2_Pin, GPIO_PIN_SET);//允许上升
-	if(motion[2].high.now <= 255)
-		HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_SET);//允许上升
+	enum motion_num i;
+	for (i=MOTION1; i<MOTION_COUNT; i++)
+	{
+		if (motion[i].high.now <= 255 * ENV_SPACE)
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
+	}
+}
+#else
+void free_ndown(void)
+{
+	enum motion_num i;
+	for (i=MOTION1; i<MOTION_COUNT; i++)
+	{
+		if (status.downlimit[i] == 0)
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
+	}
+}
+void free_nup(void)
+{
+	enum motion_num i;
+	for (i=MOTION1; i<MOTION_COUNT; i++)
+	{
+		if (status.uplimit[i] == 0)
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
+	}
 }
 #endif
 
@@ -187,11 +277,8 @@ int main(void)
   MX_USART1_UART_Init();
 
   /* USER CODE BEGIN 2 */
-	motion[0].index = 0;	//初始化缸索引值
-	motion[1].index = 1;
-	motion[2].index = 2;
 	user_io_init();
-	find_origin();
+	user_motion_init();
 	user_time_init();
 	user_uart_init();
 		
@@ -208,7 +295,7 @@ int main(void)
 	SAFE(status.seat_enable += status.seat_num);
 	SAFE(update = frame.enable);
 	SAFE(free_ndown());
-	  SAFE(free_nup());
+	SAFE(free_nup());
 	if(update)	//串口数据更新
 	{
 		SAFE(frame.enable = 0);
@@ -223,9 +310,9 @@ int main(void)
 		/*SEAT_START*/
 		if(status.seat_enable)//座椅使能
 		{
-			SAFE(motion[0].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
-			SAFE(motion[1].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
-			SAFE(motion[2].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
+			SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
+			SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
+			SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
 			SAFE(status.spb = frame.buff[5]);//更新特效
 		}
 		status.id = 0;//更新id
@@ -278,9 +365,9 @@ int main(void)
 	if(!status.seat_enable)//座椅未使能
 	{
 		status.spb = 0;	//关闭全部特效
-		SAFE(motion[0].high.set = 0 * ENV_SPACE);	//设置缸目标位置为0
-		SAFE(motion[1].high.set = 0 * ENV_SPACE);
-		SAFE(motion[2].high.set = 0 * ENV_SPACE);
+		SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);	//设置缸目标位置为0
+		SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);
+		SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);
 	}
 	SPB3(status.spb&(1<<2));	//更新特效到IO输出
 	SPB4(status.spb&(1<<3));

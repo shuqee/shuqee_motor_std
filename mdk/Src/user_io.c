@@ -88,140 +88,138 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 	status.seat_num = seat_num_tmp;
 }
 
+#ifdef ENV_NOSENSOR
+void down_limit(enum motion_num index)
+{
+	if(motion[index].high.now < 127 * ENV_SPACE)
+		HAL_GPIO_WritePin(motion[index].io.ndown_port, motion[index].io.ndown_pin, GPIO_PIN_RESET);//禁止下降
+	else
+		HAL_GPIO_WritePin(motion[index].io.nup_port, motion[index].io.nup_pin, GPIO_PIN_RESET);//禁止上升
+	if(flag_rst == 0)
+	{
+		if(motion[index].high.now < 127 * ENV_SPACE)
+			motion[index].high.now = (0-motion[index].config.adj) * ENV_SPACE;
+		else
+			motion[index].high.now = (255+motion[index].config.adj) * ENV_SPACE;
+	}
+}
+
+void up_limit(enum motion_num index)
+{
+
+}
+#else
+void down_limit(enum motion_num index)
+{
+	HAL_GPIO_WritePin(motion[index].io.ndown_port, motion[index].io.ndown_pin, GPIO_PIN_RESET);//禁止下降
+	if(flag_rst == 0)
+		motion[index].high.now = (0-motion[index].config.adj) * ENV_SPACE;
+}
+
+void up_limit(enum motion_num index)
+{
+	HAL_GPIO_WritePin(motion[index].io.nup_port, motion[index].io.nup_pin, GPIO_PIN_RESET);//禁止上升
+	if(flag_rst == 0)
+		motion[index].high.now = (255+motion[index].config.adj) * ENV_SPACE;
+}
+#endif
+
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
 	switch(GPIO_Pin)
 	{
-//		case EXTI_UPLIMIT1_Pin:
-//			if(GET_UPLIMIT1())	//一号缸上限位有效
-//			{
-//				if(!status.uplimit[0])	//消除抖动的判断
-//				{
-//					status.uplimit[0] = 1;	//消除抖动的操作
-//					HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_RESET);//禁止上升
-//				}
-//			}
-//			else
-//			{
-//				if(status.uplimit[0])
-//				{
-//					status.uplimit[0] = 0;
-//					HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_SET);//允许上升
-//					motion[0].high.now = 0xff * ENV_SPACE;	//校正当前位置
-//				}
-//			}
-//			break;
+		case EXTI_UPLIMIT1_Pin:
+			if(GET_UPLIMIT1())	//一号缸上限位有效
+			{
+				if(!status.uplimit[MOTION1])	//消除抖动的判断
+				{
+					status.uplimit[MOTION1] = 1;	//消除抖动的操作
+					up_limit(MOTION1);
+				}
+			}
+			else
+			{
+				if(status.uplimit[MOTION1])
+					status.uplimit[MOTION1] = 0;
+			}
+			break;
 		case EXTI_DOWNLIMIT1_Pin:
 			if(GET_DOWNLIMIT1())
 			{
-				if(!status.downlimit[0])
+				if(!status.downlimit[MOTION1])
 				{
-					status.downlimit[0] = 1;
-					if(motion[0].high.now < 127 * ENV_SPACE)
-						HAL_GPIO_WritePin(OUTPUT_NDOWN1_GPIO_Port, OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);//禁止下降
-					else
-						HAL_GPIO_WritePin(OUTPUT_NUP1_GPIO_Port, OUTPUT_NUP1_Pin, GPIO_PIN_RESET);//禁止下降
-					if(flag_rst == 0)
-					{
-						if(motion[0].high.now < 127 * ENV_SPACE)
-							motion[0].high.now = -10 * ENV_SPACE;
-						else
-							motion[0].high.now = 265 * ENV_SPACE;
-					}
+					status.downlimit[MOTION1] = 1;
+					down_limit(MOTION1);
 				}
 			}
 			else
 			{
-				if(status.downlimit[0])
-					status.downlimit[0] = 0;
+				if(status.downlimit[MOTION1])
+					status.downlimit[MOTION1] = 0;
 			}
 			break;
-//		case EXTI_UPLIMIT2_Pin:
-//			if(GET_UPLIMIT2())
-//			{
-//				if(!status.uplimit[1])
-//				{
-//					status.uplimit[1] = 1;
-//					HAL_GPIO_WritePin(OUTPUT_NUP2_GPIO_Port, OUTPUT_NUP2_Pin, GPIO_PIN_RESET);//禁止上升
-//				}
-//			}
-//			else
-//			{
-//				if(status.uplimit[1])
-//				{
-//					status.uplimit[1] = 0;
-//					HAL_GPIO_WritePin(OUTPUT_NUP2_GPIO_Port, OUTPUT_NUP2_Pin, GPIO_PIN_SET);//允许上升
-//					motion[1].high.now = 0xff * ENV_SPACE;
-//				}
-//			}
-//			break;
+		case EXTI_UPLIMIT2_Pin:
+			if(GET_UPLIMIT2())
+			{
+				if(!status.uplimit[MOTION2])
+				{
+					status.uplimit[MOTION2] = 1;
+					up_limit(MOTION2);
+				}
+			}
+			else
+			{
+				if(status.uplimit[MOTION2])
+				{
+					status.uplimit[MOTION2] = 0;
+				}
+			}
+			break;
 		case EXTI_DOWNLIMIT2_Pin:
 			if(GET_DOWNLIMIT2())
 			{
-				if(!status.downlimit[1])
+				if(!status.downlimit[MOTION2])
 				{
-					status.downlimit[1] = 1;
-					if(motion[1].high.now < 127 * ENV_SPACE)
-						HAL_GPIO_WritePin(OUTPUT_NDOWN2_GPIO_Port, OUTPUT_NDOWN2_Pin, GPIO_PIN_RESET);//禁止下降
-					else
-						HAL_GPIO_WritePin(OUTPUT_NUP2_GPIO_Port, OUTPUT_NUP2_Pin, GPIO_PIN_RESET);//禁止下降
-					if(flag_rst == 0)
-					{
-						if(motion[1].high.now < 127 * ENV_SPACE)
-							motion[1].high.now = -10 * ENV_SPACE;
-						else
-							motion[1].high.now = 265 * ENV_SPACE;
-					}
+					status.downlimit[MOTION2] = 1;
+					down_limit(MOTION2);
 				}
 			}
 			else
 			{
-				if(status.downlimit[1])
-					status.downlimit[1] = 0;
+				if(status.downlimit[MOTION2])
+					status.downlimit[MOTION2] = 0;
 			}
 			break;	
-//		case EXTI_UPLIMIT3_Pin:
-//			if(GET_UPLIMIT3())
-//			{
-//				if(!status.uplimit[2])
-//				{
-//					status.uplimit[2] = 1;
-//					HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_RESET);//禁止上升
-//				}
-//			}
-//			else
-//			{
-//				if(status.uplimit[2])
-//				{
-//					status.uplimit[2] = 0;
-//					HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_SET);//允许上升
-//					motion[2].high.now = 0xff * ENV_SPACE;
-//				}
-//			}
-//			break;
+		case EXTI_UPLIMIT3_Pin:
+			if(GET_UPLIMIT3())
+			{
+				if(!status.uplimit[MOTION3])
+				{
+					status.uplimit[MOTION3] = 1;
+					up_limit(MOTION3);
+				}
+			}
+			else
+			{
+				if(status.uplimit[MOTION3])
+				{
+					status.uplimit[MOTION3] = 0;
+				}
+			}
+			break;
 		case EXTI_DOWNLIMIT3_Pin:
 			if(GET_DOWNLIMIT3())
 			{
-				if(!status.downlimit[2])
+				if(!status.downlimit[MOTION3])
 				{
-					status.downlimit[2] = 1;
-					if(motion[2].high.now < 127 * ENV_SPACE)
-						HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_RESET);//禁止下降
-					else
-						HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_RESET);//禁止下降
-					if(flag_rst == 0)
-					{
-						if(motion[2].high.now < 127 * ENV_SPACE)
-							motion[2].high.now = -10 * ENV_SPACE;
-						else
-							motion[2].high.now = 265 * ENV_SPACE;
-					}
+					status.downlimit[MOTION3] = 1;
+					down_limit(MOTION3);
 				}
 			}
 			else
 			{
-				if(status.downlimit[2])
-					status.downlimit[2] = 0;
+				if(status.downlimit[MOTION3])
+					status.downlimit[MOTION3] = 0;
 			}
 			break;	
 		default:
