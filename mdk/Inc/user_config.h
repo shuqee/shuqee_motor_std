@@ -5,8 +5,8 @@
 
 //#define DEBUG_ENV	//调试模式
 
-//#define ENV_3DOF	//三自由度平台
-#define ENV_2DOF	//二自由度平台
+#define ENV_3DOF	//三自由度平台
+//#define ENV_2DOF	//二自由度平台
 
 #ifdef ENV_3DOF
 	#define ENV_NOSENSOR	//没有传感器
@@ -20,7 +20,7 @@
 	#define MOTION1_CONFIG_ADJ		10
 	#define MOTION2_CONFIG_ADJ		10
 	#define MOTION3_CONFIG_ADJ		10
-	#define ENV_SPACE 31                  //位置扩大倍数为2的ENV_SPACE次方
+	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
 #endif

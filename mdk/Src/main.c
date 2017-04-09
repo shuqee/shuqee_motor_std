@@ -4,7 +4,7 @@
   * Description        : Main program body
   ******************************************************************************
   *
-  * COPYRIGHT(c) 2016 STMicroelectronics
+  * COPYRIGHT(c) 2017 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -66,6 +66,7 @@ int flag_rst = 0;	//复位标志
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
+//static void SystemClock_Config(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
@@ -109,27 +110,27 @@ void find_origin(void)	//复位函数
 	enum motion_num i;
 	int def_high[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
-		flag_rst |= 1<<i;	//初始化复位标志(缸对应位初始值为1，复位后缸对应位清0)
+		flag_rst |= 1<<i;	//初始化复位标�?(缸对应位初始值为1，复位后缸对应位�?0)
 	while(flag_rst)	//仍有缸未复位
 	{
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0)	//未复位
+			if((flag_rst&(1<<i)) != 0)	//未复�?
 			{
 				if(def_high[i] == 0 && status.downlimit[i] == 0)	//缸未到底
 					set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
-				if(def_high[i] == 0 && status.downlimit[i] == 1)	//缸到底
+				if(def_high[i] == 0 && status.downlimit[i] == 1)	//缸到�?
 				{
-					if (motion[i].config.adj == 0) /* 不需要校正 */
+					if (motion[i].config.adj == 0) /* 不需要校�? */
 						flag_rst &= ~(1<<i);	//标志复位完成
 					else
-						def_high[i] = motion[i].config.adj * ENV_SPACE;	//开始往上
+						def_high[i] = motion[i].config.adj * ENV_SPACE;	//�?始往�?
 				}
 				if(def_high[i] != 0)
 				{
 					set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
 					def_high[i]--;
-					if(def_high[i] == 0)	//运动到指定位置
+					if(def_high[i] == 0)	//运动到指定位�?
 					{
 						flag_rst &= ~(1<<i);	//标志复位完成
 					}
@@ -199,7 +200,7 @@ void user_motion_init(void)
 		motion[i].index = i;
 		motion[i].high.set = motion[i].config.origin * ENV_SPACE;
 		if (motion[i].config.dir == GPIO_PIN_SET) /* 如果脉冲方向取反 */
-			exchange_nup_ndown(i); /* 正反转禁止对应引脚取反 */
+			exchange_nup_ndown(i); /* 正反转禁止对应引脚取�? */
 	}
 #ifdef ENV_RESET
 	find_origin();
@@ -270,6 +271,7 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
+  //SystemClock_Config();
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
@@ -304,7 +306,7 @@ int main(void)
 		led_count = led_count%10;
 		if(led_count == 0)
 		{
-			LED_TOGGLE();	//闪烁指示灯
+			LED_TOGGLE();	//闪烁指示�?
 		}
 		/*LED_END*/
 		/*SEAT_START*/
@@ -343,7 +345,7 @@ int main(void)
 	/*SEND_SEAT_START*/
 	if(send_seat)
 	{
-		HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发送
+		HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发�??
 		if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 		{
 			huart1.Instance->DR = send_buf[send_index];
@@ -362,7 +364,7 @@ int main(void)
 	}
 	/*SEND_SEAT_END*/
 	/*SPB_START*/
-	if(!status.seat_enable)//座椅未使能
+	if(!status.seat_enable)//座椅未使�?
 	{
 		status.spb = 0;	//关闭全部特效
 		SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);	//设置缸目标位置为0
@@ -378,7 +380,10 @@ int main(void)
 	/*SPB_END*/
 	/*RST_START*/
 	if (status.spb&0x01)
+	{
 		SAFE( HAL_NVIC_SystemReset() );
+		while(1);
+	}
 	/*RST_END*/
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
   }

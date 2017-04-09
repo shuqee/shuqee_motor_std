@@ -112,14 +112,14 @@ void up_limit(enum motion_num index)
 void down_limit(enum motion_num index)
 {
 	HAL_GPIO_WritePin(motion[index].io.ndown_port, motion[index].io.ndown_pin, GPIO_PIN_RESET);//禁止下降
-	if(flag_rst == 0)
+	if ((flag_rst == 0) && (status.uplimit[index] == 0))
 		motion[index].high.now = (0-motion[index].config.adj) * ENV_SPACE;
 }
 
 void up_limit(enum motion_num index)
 {
 	HAL_GPIO_WritePin(motion[index].io.nup_port, motion[index].io.nup_pin, GPIO_PIN_RESET);//禁止上升
-	if(flag_rst == 0)
+	if ((flag_rst == 0) && (status.downlimit[index] == 0))
 		motion[index].high.now = (255+motion[index].config.adj) * ENV_SPACE;
 }
 #endif
