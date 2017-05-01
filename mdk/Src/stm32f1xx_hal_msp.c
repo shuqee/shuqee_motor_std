@@ -145,6 +145,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
 
 }
 
+void HAL_IWDG_MspInit(IWDG_HandleTypeDef* hiwdg)
+{
+
+}
+
 void HAL_TIM_Base_MspInit(TIM_HandleTypeDef* htim_base)
 {
 

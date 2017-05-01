@@ -47,6 +47,8 @@
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
 
+IWDG_HandleTypeDef hiwdg;
+
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
@@ -58,7 +60,7 @@ UART_HandleTypeDef huart1;
 
 struct motion_status motion[MOTION_COUNT] = {MOTION1};
 struct status status = {0};
-int flag_rst = 0;	//复位标志
+int flag_rst = 0;	//reset flag
 
 /* USER CODE END PV */
 
@@ -72,6 +74,7 @@ static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_IWDG_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -105,7 +108,7 @@ void delay_ms(uint32_t times)
 }
 
 #ifdef ENV_RESET
-void find_origin(void)	//复位函数
+void find_origin(void)	//reset function
 {
 	enum motion_num i;
 	int def_high[MOTION_COUNT] = {0};
@@ -251,13 +254,13 @@ void free_nup(void)
 
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
 	static uint8_t send_seat = 0;
 	static uint8_t send_buf[4] = {0xff,0xc1};	//回复帧头
 	static int send_index = 0;
 	uint8_t update;										//串口数据更新标志
+	uint8_t init_flag = 0; //初始化标准位
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -277,12 +280,8 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
-
+  MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-	user_io_init();
-	user_motion_init();
-	user_time_init();
-	user_uart_init();
 		
   /* USER CODE END 2 */
 
@@ -293,102 +292,114 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-	status.seat_enable = GET_SEAT_ENABLE();
-	SAFE(status.seat_enable += status.seat_num);
-	SAFE(update = frame.enable);
-	SAFE(free_ndown());
-	SAFE(free_nup());
-	if(update)	//串口数据更新
+  	led_count = 0;
+	send_seat = 0;
+	send_index = 0;
+	  
+	user_io_init();
+	user_motion_init();
+	user_time_init();
+	user_uart_init();
+	HAL_IWDG_Start(&hiwdg);
+	  
+	init_flag = 1;
+	  
+	while (init_flag != 0)
 	{
-		SAFE(frame.enable = 0);
-		/*LED_START*/
-		led_count++;
-		led_count = led_count%10;
-		if(led_count == 0)
+		HAL_IWDG_Refresh(&hiwdg);
+		status.seat_enable = GET_SEAT_ENABLE();
+		SAFE(status.seat_enable += status.seat_num);
+		SAFE(update = frame.enable);
+		SAFE(free_ndown());
+		SAFE(free_nup());
+		if(update)	//串口数据更新
 		{
-			LED_TOGGLE();	//闪烁指示�?
+			SAFE(frame.enable = 0);
+			/*LED_START*/
+			led_count++;
+			led_count = led_count%10;
+			if(led_count == 0)
+			{
+				LED_TOGGLE();	//闪烁指示�?
+			}
+			/*LED_END*/
+			/*SEAT_START*/
+			if(status.seat_enable)//座椅使能
+			{
+				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
+				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
+				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
+				SAFE(status.spb = frame.buff[5]);//更新特效
+			}
+			status.id = 0;//更新id
+			if(GET_ID_1())
+				status.id = status.id + 1;
+			if(GET_ID_2())
+				status.id = status.id + 2;
+			if(GET_ID_4())
+				status.id = status.id + 4;
+			if(GET_ID_8())
+				status.id = status.id + 8;
+			if(GET_ID_10())
+				status.id = status.id + 10;
+			if(GET_ID_20())
+				status.id = status.id + 20;
+			if(GET_ID_40())
+				status.id = status.id + 40;
+			if(GET_ID_80())
+				status.id = status.id + 80;
+			if(frame.buff[7] == status.id)//判断座椅编号
+			{
+				send_seat = 1;
+				send_buf[2] = status.id;
+				SAFE(send_buf[3] = status.seat_num);
+			}
+			/*SEAT_END*/
 		}
-		/*LED_END*/
-		/*SEAT_START*/
-		if(status.seat_enable)//座椅使能
+		/*SEND_SEAT_START*/
+		if(send_seat)
 		{
-			SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
-			SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
-			SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
-			SAFE(status.spb = frame.buff[5]);//更新特效
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发�??
+			if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
+			{
+				huart1.Instance->DR = send_buf[send_index];
+				send_index++;
+			}
+			if(send_index == 4)
+			{
+				send_index = 0;
+				send_seat = 0;
+			}
 		}
-		status.id = 0;//更新id
-		if(GET_ID_1())
-			status.id = status.id + 1;
-		if(GET_ID_2())
-			status.id = status.id + 2;
-		if(GET_ID_4())
-			status.id = status.id + 4;
-		if(GET_ID_8())
-			status.id = status.id + 8;
-		if(GET_ID_10())
-			status.id = status.id + 10;
-		if(GET_ID_20())
-			status.id = status.id + 20;
-		if(GET_ID_40())
-			status.id = status.id + 40;
-		if(GET_ID_80())
-			status.id = status.id + 80;
-		if(frame.buff[7] == status.id)//判断座椅编号
+		else
 		{
-			send_seat = 1;
-			send_buf[2] = status.id;
-			SAFE(send_buf[3] = status.seat_num);
-		}
-		/*SEAT_END*/
-	}
-	/*SEND_SEAT_START*/
-	if(send_seat)
-	{
-		HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发�??
-		if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
-		{
-			huart1.Instance->DR = send_buf[send_index];
-			send_index++;
-		}
-		if(send_index == 4)
-		{
-			send_index = 0;
-			send_seat = 0;
-		}
-	}
-	else
-	{
-		if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
+			if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);//485接收
+		}
+		/*SEND_SEAT_END*/
+		/*SPB_START*/
+		if(!status.seat_enable)//座椅未使�?
+		{
+			status.spb = 0;	//关闭全部特效
+			SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);	//设置缸目标位置为0
+			SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);
+			SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);
+		}
+		SPB3(status.spb&(1<<2));	//更新特效到IO输出
+		SPB4(status.spb&(1<<3));
+		SPB5(status.spb&(1<<4));
+		SPB6(status.spb&(1<<5));
+		SPB7(status.spb&(1<<6));
+		SPB8(status.spb&(1<<7));
+		/*SPB_END*/
+		/*RST_START*/
+		if (status.spb&0x01)
+			init_flag = 0;
+		/*RST_END*/
+		HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
 	}
-	/*SEND_SEAT_END*/
-	/*SPB_START*/
-	if(!status.seat_enable)//座椅未使�?
-	{
-		status.spb = 0;	//关闭全部特效
-		SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);	//设置缸目标位置为0
-		SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);
-		SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);
-	}
-	SPB3(status.spb&(1<<2));	//更新特效到IO输出
-	SPB4(status.spb&(1<<3));
-	SPB5(status.spb&(1<<4));
-	SPB6(status.spb&(1<<5));
-	SPB7(status.spb&(1<<6));
-	SPB8(status.spb&(1<<7));
-	/*SPB_END*/
-	/*RST_START*/
-	if (status.spb&0x01)
-	{
-		SAFE( HAL_NVIC_SystemReset() );
-		while(1);
-	}
-	/*RST_END*/
-	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
   }
   /* USER CODE END 3 */
-
 }
 
 /** System Clock Configuration
@@ -400,9 +411,11 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -469,6 +482,17 @@ void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = 4;
   HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+
+}
+
+/* IWDG init function */
+void MX_IWDG_Init(void)
+{
+
+  hiwdg.Instance = IWDG;
+  hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+  hiwdg.Init.Reload = 4095;
+  HAL_IWDG_Init(&hiwdg);
 
 }
 
