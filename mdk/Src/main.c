@@ -111,7 +111,9 @@ void delay_ms(uint32_t times)
 void find_origin(void)	//reset function
 {
 	enum motion_num i;
+	uint8_t downlimit_temp = 0;
 	int def_high[MOTION_COUNT] = {0};
+	int find_origin_step[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
 		flag_rst |= 1<<i;	//初始化复位标�?(缸对应位初始值为1，复位后缸对应位�?0)
 #ifndef MOTION1_ENABLE
@@ -129,23 +131,50 @@ void find_origin(void)	//reset function
 		{
 			if((flag_rst&(1<<i)) != 0)	//未复�?
 			{
-				if(def_high[i] == 0 && status.downlimit[i] == 0)	//缸未到底
-					set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
-				if(def_high[i] == 0 && status.downlimit[i] == 1)	//缸到�?
+				SAFE(downlimit_temp = status.downlimit[i]);
+				switch (find_origin_step[i])
 				{
-					if (motion[i].config.adj == 0) /* 不需要校�? */
-						flag_rst &= ~(1<<i);	//标志复位完成
-					else
-						def_high[i] = motion[i].config.adj * ENV_SPACE;	//�?始往�?
-				}
-				if(def_high[i] != 0)
-				{
-					set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
-					def_high[i]--;
-					if(def_high[i] == 0)	//运动到指定位�?
-					{
-						flag_rst &= ~(1<<i);	//标志复位完成
-					}
+					case 0:
+						if (downlimit_temp == 0) //缸未到底
+							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+						else
+							++find_origin_step[i];
+						break;
+					case 1:
+						if (downlimit_temp == 1) //缸到底
+							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+						else
+							++find_origin_step[i];
+						break;
+					case 2:
+						if (downlimit_temp == 0) //缸未到底
+							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+						else
+							++find_origin_step[i];
+						break;
+					case 3:
+						if (motion[i].config.adj == 0) /* 不需要校歿 */
+							flag_rst &= ~(1<<i);	//标志复位完成
+						else
+						{
+							def_high[i] = motion[i].config.adj * ENV_SPACE;	//弿始往丿
+							++find_origin_step[i];
+						}
+						break;
+					case 4:
+						if(def_high[i] != 0)
+						{
+							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+							def_high[i]--;
+							if(def_high[i] == 0)	//运动到指定位罿
+							{
+								flag_rst &= ~(1<<i);	//标志复位完成
+							}
+						}
+						break;
+					default:
+						find_origin_step[i] = 0;
+						break;
 				}
 			}
 		}

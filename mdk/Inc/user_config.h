@@ -7,8 +7,8 @@
 
 //#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
-#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
-//#define ENV_2DOF	           //二自由度平台摆杆式
+//#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
+#define ENV_2DOF	           //二自由度平台摆杆式
 
 #ifdef ENV_3DOF_NO_SENSOR
 	#define ENV_NOSENSOR	//没有传感器
