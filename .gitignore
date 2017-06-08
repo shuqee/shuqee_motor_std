@@ -1,5 +1,5 @@
-*.mxproject
-mdk/Drivers/STM32F1xx_HAL_Driver/
-mdk/Drivers/CMSIS/
-mdk/MDK-ARM/
-*.ioc
+/*.mxproject
+/mdk/Drivers/STM32F1xx_HAL_Driver/
+/mdk/Drivers/CMSIS/
+/mdk/MDK-ARM/
+/*.ioc
