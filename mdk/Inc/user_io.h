@@ -43,5 +43,6 @@
 
 
 extern void user_io_init(void);
+extern void user_io_stop(void);
 
 #endif /* __USER_IO_H */

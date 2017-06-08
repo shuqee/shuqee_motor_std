@@ -5,12 +5,17 @@
 
 //#define DEBUG_ENV	//调试模式
 
-#define ENV_3DOF	//三自由度平台
-//#define ENV_2DOF	//二自由度平台
+//#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
+//#define ENV_3DOF	           //三自由度平台直线缸式
+#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
+//#define ENV_2DOF	           //二自由度平台摆杆式
 
-#ifdef ENV_3DOF
+#ifdef ENV_3DOF_NO_SENSOR
 	#define ENV_NOSENSOR	//没有传感器
 	#define ENV_RESET	//复位
+	#define MOTION1_ENABLE
+	#define MOTION2_ENABLE
+	#define MOTION3_ENABLE
 	#define MOTION1_CONFIG_DIR	GPIO_PIN_RESET
 	#define MOTION2_CONFIG_DIR	GPIO_PIN_RESET
 	#define MOTION3_CONFIG_DIR	GPIO_PIN_RESET
@@ -25,8 +30,13 @@
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
 #endif
 
-#ifdef ENV_2DOF
+#ifdef ENV_3DOF_SWING_LINK
 	#define ENV_RESET	//复位
+	#define ENV_SWING_LINK
+	//#define ENV_SHAKE
+	#define MOTION1_ENABLE
+	#define MOTION2_ENABLE
+	#define MOTION3_ENABLE
 	#define MOTION1_CONFIG_DIR	GPIO_PIN_SET
 	#define MOTION2_CONFIG_DIR	GPIO_PIN_RESET
 	#define MOTION3_CONFIG_DIR	GPIO_PIN_RESET
@@ -40,6 +50,27 @@
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
 #endif
+
+#ifdef ENV_2DOF
+	#define ENV_RESET	//复位
+	#define ENV_SWING_LINK
+	#define MOTION1_ENABLE
+	#define MOTION3_ENABLE
+	#define MOTION1_CONFIG_DIR	GPIO_PIN_RESET
+	#define MOTION2_CONFIG_DIR	GPIO_PIN_RESET
+	#define MOTION3_CONFIG_DIR	GPIO_PIN_SET
+	#define MOTION1_CONFIG_ORIGIN	127
+	#define MOTION2_CONFIG_ORIGIN	0
+	#define MOTION3_CONFIG_ORIGIN	127
+	#define MOTION1_CONFIG_ADJ		0
+	#define MOTION2_CONFIG_ADJ		0
+	#define MOTION3_CONFIG_ADJ		0
+	#define ENV_SPACE 25                  //位置扩大倍数为2的ENV_SPACE次方
+	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
+	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
+#endif
+
+#define SPB_AIR_INJECTION_MASK (0x1<<6)
 
 
 #define SAFE(x) do{ \

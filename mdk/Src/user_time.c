@@ -12,6 +12,13 @@ void user_time_init(void)
 	HAL_TIM_Base_Start_IT(&htim3);
 }
 
+void user_time_stop(void)
+{
+	HAL_TIM_Base_Stop_IT(&htim1);
+	HAL_TIM_Base_Stop_IT(&htim2);
+	HAL_TIM_Base_Stop_IT(&htim3);
+}
+
 #ifdef ENV_RESET
 void set_pul(enum motion_num index, GPIO_PinState dir, uint16_t speed, uint32_t conut)	//设定输出固定个数、频率、方向、缸号的脉冲
 {

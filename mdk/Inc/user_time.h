@@ -5,6 +5,7 @@
 #include "user_config.h"
 
 extern void user_time_init(void);
+extern void user_time_stop(void);
 extern void delay_ns(uint32_t times);
 extern void delay_us(uint32_t times);
 extern void delay_ms(uint32_t times);

@@ -1,13 +1,22 @@
 #include "stm32f1xx_hal.h"
 #include "user_uart.h"
 
+#include <string.h>
+
 extern UART_HandleTypeDef huart1;
 
 struct frame frame = {0};
 
 void user_uart_init(void)
 {
+	memset((void *)&frame, 0, sizeof(frame));
+	__HAL_UART_ENABLE(&huart1);
 	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);	//串口接收一个字节，并通过中断返回结果
+}
+
+void user_uart_stop(void)
+{
+	__HAL_UART_DISABLE(&huart1);
 }
 
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)

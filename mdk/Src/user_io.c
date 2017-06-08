@@ -2,6 +2,8 @@
 #include "user_config.h"
 #include "user_io.h"
 
+#include <string.h>
+
 #define ADC_TH 0x03e8
 
 extern int flag_rst;
@@ -37,7 +39,13 @@ void user_io_init(void)
 	HAL_GPIO_WritePin(OUTPUT_CLR2_GPIO_Port, OUTPUT_CLR2_Pin, GPIO_PIN_SET);//消除警报
 	HAL_GPIO_WritePin(OUTPUT_CLR3_GPIO_Port, OUTPUT_CLR3_Pin, GPIO_PIN_SET);//消除警报
 	
+	memset((void *)adc, 0, sizeof(adc));
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc, 20);
+}
+
+void user_io_stop(void)
+{
+	HAL_ADC_Stop_DMA(&hadc1);
 }
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)

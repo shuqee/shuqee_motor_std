@@ -114,6 +114,15 @@ void find_origin(void)	//reset function
 	int def_high[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
 		flag_rst |= 1<<i;	//初始化复位标�?(缸对应位初始值为1，复位后缸对应位�?0)
+#ifndef MOTION1_ENABLE
+	flag_rst &= ~(1<<MOTION1);
+#endif
+#ifndef MOTION2_ENABLE
+	flag_rst &= ~(1<<MOTION2);
+#endif
+#ifndef MOTION3_ENABLE
+	flag_rst &= ~(1<<MOTION3);
+#endif
 	while(flag_rst)	//仍有缸未复位
 	{
 		for(i=MOTION1; i<MOTION_COUNT; i++)
@@ -140,6 +149,7 @@ void find_origin(void)	//reset function
 				}
 			}
 		}
+		HAL_IWDG_Refresh(&hiwdg); /* have to refresh the iwdg */
 	}
 }
 #endif
@@ -159,7 +169,6 @@ void exchange_nup_ndown(enum motion_num index)
 void user_motion_init(void)
 {
 	enum motion_num i;
-	memset((void *)motion, 0, sizeof(motion));
 	
 	motion[MOTION1].io.dir_port = OUTPUT_DIR1_GPIO_Port;
 	motion[MOTION1].io.dir_pin = OUTPUT_DIR1_Pin;
@@ -250,6 +259,72 @@ void free_nup(void)
 }
 #endif
 
+#ifdef ENV_SHAKE
+void shake_range(uint8_t index, int range)
+{
+	__IO uint8_t *pdata = 0;
+	
+	if (index == MOTION1)
+		pdata = &(frame.buff[4]);
+	else if (index == MOTION2)
+		pdata = &(frame.buff[3]);
+	else if (index == MOTION3)
+		pdata = &(frame.buff[2]);
+	else
+		return;
+	
+	if (range >= 0 && range <= 0xff)
+	{
+		if (*pdata >= (0xff - range))
+			*pdata = 0xff;
+		else
+			*pdata += range;
+	}
+	if (range < 0 && range >= -0xff)
+	{
+		if (*pdata <= (-range))
+			*pdata = 0;
+		else
+			*pdata -= (-range);
+	}
+}
+void shake(void)
+{
+	static int step = 0;
+	static int count = 0;
+	static int range = 10;
+	
+		switch (step)
+	{
+		case 0:
+			SAFE(shake_range(MOTION1, range));
+			//SAFE(shake_range(MOTION2, -range));
+			SAFE(shake_range(MOTION3, range));
+			++count;
+			if (count >= 2)
+			{
+				count = 0;
+				++step;
+			}
+			break;
+		case 1:
+			SAFE(shake_range(MOTION1, -range));
+			//SAFE(shake_range(MOTION2, range));
+			SAFE(shake_range(MOTION3, -range));
+			++count;
+			if (count >= 2)
+			{
+				count = 0;
+				step = 0;
+			}
+			break;
+		default:
+			step = 0;
+			break;
+	}
+}
+#endif
+
 /* USER CODE END 0 */
 
 int main(void)
@@ -282,7 +357,7 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
-		
+  HAL_IWDG_Start(&hiwdg);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -292,15 +367,23 @@ int main(void)
   /* USER CODE END WHILE */
 
   /* USER CODE BEGIN 3 */
-  	led_count = 0;
+	  
+	memset((void *)motion, 0 ,sizeof(motion));
+	SAFE(memset((void *)&status, 0 ,sizeof(status)));
+	SAFE(status.uplimit[MOTION1] = GET_UPLIMIT1());
+	SAFE(status.uplimit[MOTION2] = GET_UPLIMIT2());
+	SAFE(status.uplimit[MOTION3] = GET_UPLIMIT3());
+	SAFE(status.downlimit[MOTION1] = GET_DOWNLIMIT1());
+	SAFE(status.downlimit[MOTION2] = GET_DOWNLIMIT2());
+	SAFE(status.downlimit[MOTION3] = GET_DOWNLIMIT3());
+	led_count = 0;
 	send_seat = 0;
 	send_index = 0;
 	  
 	user_io_init();
-	user_motion_init();
+	user_motion_init(); 
 	user_time_init();
 	user_uart_init();
-	HAL_IWDG_Start(&hiwdg);
 	  
 	init_flag = 1;
 	  
@@ -326,10 +409,38 @@ int main(void)
 			/*SEAT_START*/
 			if(status.seat_enable)//座椅使能
 			{
-				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
-				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
-				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
 				SAFE(status.spb = frame.buff[5]);//更新特效
+#ifdef ENV_SHAKE
+				if (status.spb&(0x1<<1))
+					shake();
+#endif
+#ifdef MOTION1_ENABLE
+				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
+#else
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);//恢复目标位置
+#endif
+#ifdef MOTION2_ENABLE
+				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
+#else
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);//恢复目标位置
+#endif
+#ifdef MOTION3_ENABLE
+				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
+#else
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);//恢复目标位置
+#endif
+			}
+			else
+			{
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(status.spb = frame.buff[5]);//更新特效
+#ifdef ENV_SWING_LINK
+				SAFE(status.spb &= SPB_AIR_INJECTION_MASK);//恢复特效
+#else
+				SAFE(status.spb = 0);//恢复特效
+#endif
 			}
 			status.id = 0;//更新id
 			if(GET_ID_1())
@@ -378,13 +489,6 @@ int main(void)
 		}
 		/*SEND_SEAT_END*/
 		/*SPB_START*/
-		if(!status.seat_enable)//座椅未使�?
-		{
-			status.spb = 0;	//关闭全部特效
-			SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);	//设置缸目标位置为0
-			SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);
-			SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);
-		}
 		SPB3(status.spb&(1<<2));	//更新特效到IO输出
 		SPB4(status.spb&(1<<3));
 		SPB5(status.spb&(1<<4));
@@ -394,9 +498,17 @@ int main(void)
 		/*SPB_END*/
 		/*RST_START*/
 		if (status.spb&0x01)
+		{
+			user_io_stop();
+			user_time_stop();
+			user_uart_stop();
 			init_flag = 0;
-		/*RST_END*/
-		HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
+		}
+		else
+		{
+			/*RST_END*/
+			HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
+		}
 	}
   }
   /* USER CODE END 3 */
