@@ -5,3 +5,11 @@
 *.uvoptx
 *.lst
 *.axf
+*.htm
+*.lnp
+*.map
+*.sct
+*.crf
+*.d
+*.dep
+*.o
