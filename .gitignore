@@ -3,3 +3,9 @@
 /mdk/Drivers/CMSIS/
 /mdk/MDK-ARM/
 /*.ioc
+/mdk/MDK-ARM/shuqee_stm32f103vet6 Configuration
+/mdk/MDK-ARM/shuqee_stm32f103vet6.uvguix.york
+/mdk/MDK-ARM
+/mdk/Drivers
+/mdk/.mxproject
+/mdk/shuqee_stm32f103vet6.ioc
