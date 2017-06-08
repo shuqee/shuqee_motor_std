@@ -1,11 +1,5 @@
-/*.mxproject
-/mdk/Drivers/STM32F1xx_HAL_Driver/
-/mdk/Drivers/CMSIS/
-/mdk/MDK-ARM/
-/*.ioc
-/mdk/MDK-ARM/shuqee_stm32f103vet6 Configuration
-/mdk/MDK-ARM/shuqee_stm32f103vet6.uvguix.york
-/mdk/MDK-ARM
-/mdk/Drivers
 /mdk/.mxproject
 /mdk/shuqee_stm32f103vet6.ioc
+/mdk/MDK-ARM/*.Administrator
+/mdk/MDK-ARM/*.york
+/mdk/MDK-ARM/*.uvoptx
