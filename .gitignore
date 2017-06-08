@@ -1,7 +1,7 @@
-/mdk/.mxproject
+*.mxproject
 /mdk/shuqee_stm32f103vet6.ioc
-/mdk/MDK-ARM/*.Administrator
-/mdk/MDK-ARM/*.york
-/mdk/MDK-ARM/*.uvoptx
-/mdk/MDK-ARM/shuqee_stm32f103vet6 Configuration
-/mdk/MDK-ARM/*.lst
+*.Administrator
+*.york
+*.uvoptx
+*.lst
+*.axf
