@@ -135,24 +135,80 @@ void find_origin(void)	//reset function
 				switch (find_origin_step[i])
 				{
 					case 0:
+						if (i == MOTION1)
+						{
+							LED_SEAT1(1);
+							LED_SEAT2(1);
+						}
+						if (i == MOTION3)
+						{
+							LED_SEAT3(1);
+							LED_SEAT4(1);
+						}
 						if (downlimit_temp == 0) //缸未到底
+						{
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
 							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+						}
 						else
+						{
 							++find_origin_step[i];
+						}
 						break;
 					case 1:
+						if (i == MOTION1)
+						{
+							LED_SEAT1(0);
+							LED_SEAT2(1);
+						}
+						if (i == MOTION3)
+						{
+							LED_SEAT3(0);
+							LED_SEAT4(1);
+						}
 						if (downlimit_temp == 1) //缸到底
+						{
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
 							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+						}
 						else
+						{
 							++find_origin_step[i];
+						}
 						break;
 					case 2:
+						if (i == MOTION1)
+						{
+							LED_SEAT1(1);
+							LED_SEAT2(0);
+						}
+						if (i == MOTION3)
+						{
+							LED_SEAT3(1);
+							LED_SEAT4(0);
+						}
 						if (downlimit_temp == 0) //缸未到底
+						{
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
 							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+						}
 						else
+						{
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
 							++find_origin_step[i];
+						}
 						break;
 					case 3:
+						if (i == MOTION1)
+						{
+							LED_SEAT1(0);
+							LED_SEAT2(0);
+						}
+						if (i == MOTION3)
+						{
+							LED_SEAT3(0);
+							LED_SEAT4(0);
+						}
 						if (motion[i].config.adj == 0) /* 不需要校歿 */
 							flag_rst &= ~(1<<i);	//标志复位完成
 						else
@@ -162,6 +218,16 @@ void find_origin(void)	//reset function
 						}
 						break;
 					case 4:
+						if (i == MOTION1)
+						{
+							LED_SEAT1(0);
+							LED_SEAT2(0);
+						}
+						if (i == MOTION3)
+						{
+							LED_SEAT3(0);
+							LED_SEAT4(0);
+						}
 						if(def_high[i] != 0)
 						{
 							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
@@ -178,7 +244,9 @@ void find_origin(void)	//reset function
 				}
 			}
 		}
+#ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg); /* have to refresh the iwdg */
+#endif
 	}
 }
 #endif
@@ -386,7 +454,9 @@ int main(void)
   MX_USART1_UART_Init();
   MX_IWDG_Init();
   /* USER CODE BEGIN 2 */
+#ifdef ENV_IWDG
   HAL_IWDG_Start(&hiwdg);
+#endif
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -398,13 +468,10 @@ int main(void)
   /* USER CODE BEGIN 3 */
 	  
 	memset((void *)motion, 0 ,sizeof(motion));
-	SAFE(memset((void *)&status, 0 ,sizeof(status)));
-	SAFE(status.uplimit[MOTION1] = GET_UPLIMIT1());
-	SAFE(status.uplimit[MOTION2] = GET_UPLIMIT2());
-	SAFE(status.uplimit[MOTION3] = GET_UPLIMIT3());
-	SAFE(status.downlimit[MOTION1] = GET_DOWNLIMIT1());
-	SAFE(status.downlimit[MOTION2] = GET_DOWNLIMIT2());
-	SAFE(status.downlimit[MOTION3] = GET_DOWNLIMIT3());
+	status.id = 0;
+	status.seat_num = 0;
+	status.seat_enable = 0;
+	status.spb = 0;
 	led_count = 0;
 	send_seat = 0;
 	send_index = 0;
@@ -418,7 +485,9 @@ int main(void)
 	  
 	while (init_flag != 0)
 	{
+#ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
+#endif
 		status.seat_enable = GET_SEAT_ENABLE();
 		SAFE(status.seat_enable += status.seat_num);
 		SAFE(update = frame.enable);
