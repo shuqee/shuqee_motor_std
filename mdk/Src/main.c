@@ -356,72 +356,6 @@ void free_nup(void)
 }
 #endif
 
-#ifdef ENV_SHAKE
-void shake_range(uint8_t index, int range)
-{
-	__IO uint8_t *pdata = 0;
-	
-	if (index == MOTION1)
-		pdata = &(frame.buff[4]);
-	else if (index == MOTION2)
-		pdata = &(frame.buff[3]);
-	else if (index == MOTION3)
-		pdata = &(frame.buff[2]);
-	else
-		return;
-	
-	if (range >= 0 && range <= 0xff)
-	{
-		if (*pdata >= (0xff - range))
-			*pdata = 0xff;
-		else
-			*pdata += range;
-	}
-	if (range < 0 && range >= -0xff)
-	{
-		if (*pdata <= (-range))
-			*pdata = 0;
-		else
-			*pdata -= (-range);
-	}
-}
-void shake(void)
-{
-	static int step = 0;
-	static int count = 0;
-	static int range = 10;
-	
-		switch (step)
-	{
-		case 0:
-			SAFE(shake_range(MOTION1, range));
-			//SAFE(shake_range(MOTION2, -range));
-			SAFE(shake_range(MOTION3, range));
-			++count;
-			if (count >= 2)
-			{
-				count = 0;
-				++step;
-			}
-			break;
-		case 1:
-			SAFE(shake_range(MOTION1, -range));
-			//SAFE(shake_range(MOTION2, range));
-			SAFE(shake_range(MOTION3, -range));
-			++count;
-			if (count >= 2)
-			{
-				count = 0;
-				step = 0;
-			}
-			break;
-		default:
-			step = 0;
-			break;
-	}
-}
-#endif
-
 /* USER CODE END 0 */
 
 int main(void)
@@ -508,10 +442,6 @@ int main(void)
 			if(status.seat_enable)//座椅使能
 			{
 				SAFE(status.spb = frame.buff[5]);//更新特效
-#ifdef ENV_SHAKE
-				if (status.spb&(0x1<<1))
-					shake();
-#endif
 #ifdef MOTION1_ENABLE
 				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
 #else

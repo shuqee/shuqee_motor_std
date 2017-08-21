@@ -7,10 +7,10 @@
 
 #define ENV_IWDG
 
-//#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
+#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
 //#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
-#define ENV_2DOF	           //二自由度平台摆杆式
+//#define ENV_2DOF	           //二自由度平台摆杆式
 
 #ifdef ENV_3DOF_NO_SENSOR
 	#define ENV_NOSENSOR	//没有传感器
@@ -28,6 +28,8 @@
 	#define MOTION2_CONFIG_ADJ		10
 	#define MOTION3_CONFIG_ADJ		10
 	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
+	/* 150cm行程的时候ENV_SPACE取40 */
+	//#define ENV_SPACE 40                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
 #endif
@@ -35,7 +37,6 @@
 #ifdef ENV_3DOF_SWING_LINK
 	#define ENV_RESET	//复位
 	#define ENV_SWING_LINK
-	//#define ENV_SHAKE
 	#define MOTION1_ENABLE
 	#define MOTION2_ENABLE
 	#define MOTION3_ENABLE
