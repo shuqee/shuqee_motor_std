@@ -31,7 +31,7 @@
 	/* 150cm行程的时候ENV_SPACE取40 */
 	//#define ENV_SPACE 40                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
-	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
+	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 #endif
 
 #ifdef ENV_3DOF_SWING_LINK
@@ -51,7 +51,10 @@
 	#define MOTION3_CONFIG_ADJ		0
 	#define ENV_SPACE 25                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
-	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
+	/* 中速 */
+	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
+	/* 高速 */
+//	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)8)
 #endif
 
 #ifdef ENV_2DOF
@@ -70,7 +73,7 @@
 	#define MOTION3_CONFIG_ADJ		0
 	#define ENV_SPACE 25                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
-	#define ENV_ACCER     (ENV_SPACE * (uint32_t)255 * (uint32_t)20)
+	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 #endif
 
 #define SPB_AIR_INJECTION_MASK (0x1<<6)
