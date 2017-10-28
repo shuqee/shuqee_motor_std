@@ -362,9 +362,14 @@ int main(void)
 {
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
+#ifdef ENV_SEAT_PICKING
+	static uint8_t seat_picking = 0;
+#endif
+#ifdef ENV_SEND_SEAT_INFO
 	static uint8_t send_seat = 0;
 	static uint8_t send_buf[4] = {0xff,0xc1};	//回复帧头
 	static int send_index = 0;
+#endif
 	uint8_t update;										//串口数据更新标志
 	uint8_t init_flag = 0; //初始化标准位
   /* USER CODE END 1 */
@@ -407,9 +412,13 @@ int main(void)
 	status.seat_enable = 0;
 	status.spb = 0;
 	led_count = 0;
+#ifdef ENV_SEAT_PICKING
+	seat_picking = 0;
+#endif
+#ifdef ENV_SEND_SEAT_INFO
 	send_seat = 0;
 	send_index = 0;
-	  
+#endif
 	user_io_init();
 	user_motion_init(); 
 	user_time_init();
@@ -439,6 +448,12 @@ int main(void)
 			}
 			/*LED_END*/
 			/*SEAT_START*/
+#ifdef ENV_SEAT_PICKING
+			if (seat_picking == 0)//座椅未被选中
+			{
+				status.seat_enable = 0;
+			}
+#endif
 			if(status.seat_enable)//座椅使能
 			{
 				SAFE(status.spb = frame.buff[5]);//更新特效
@@ -487,15 +502,39 @@ int main(void)
 				status.id = status.id + 40;
 			if(GET_ID_80())
 				status.id = status.id + 80;
+#ifdef ENV_SEAT_PICKING
+			if (frame.buff[7] == 0xAA)//选中所有座椅
+			{
+				seat_picking = 1;
+			}
+			else if (frame.buff[7] == 0x00)//取消选中所有座椅
+			{
+				seat_picking = 0;
+			}
+			else if (frame.buff[7] == status.id)//根据ID选中座椅
+			{
+				seat_picking = 1;
+			}
+			else
+			{
+				; /* 维持当前选中或未选中状态 */
+			}
+#endif
+#ifdef ENV_SEND_SEAT_INFO
 			if(frame.buff[7] == status.id)//判断座椅编号
 			{
-				send_seat = 1;
-				send_buf[2] = status.id;
-				SAFE(send_buf[3] = status.seat_num);
+				if (frame.buff[7] != 0x00)
+				{
+					send_seat = 1;
+					send_buf[2] = status.id;
+					SAFE(send_buf[3] = status.seat_num);
+				}
 			}
+#endif
 			/*SEAT_END*/
 		}
 		/*SEND_SEAT_START*/
+#ifdef ENV_SEND_SEAT_INFO
 		if(send_seat)
 		{
 			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发�??
@@ -515,6 +554,7 @@ int main(void)
 			if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);//485接收
 		}
+#endif
 		/*SEND_SEAT_END*/
 		/*SPB_START*/
 		SPB3(status.spb&(1<<2));	//更新特效到IO输出
