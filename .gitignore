@@ -2,7 +2,6 @@
 /mdk/shuqee_stm32f103vet6.ioc
 *.Administrator
 *.york
-*.uvoptx
 *.lst
 *.axf
 *.htm
