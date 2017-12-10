@@ -43,7 +43,12 @@ void user_io_init(void)
 	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc, 20);
 }
 
-void user_io_stop(void)
+void user_adc_start(void)
+{
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc, 20);
+}
+
+void user_adc_stop(void)
 {
 	HAL_ADC_Stop_DMA(&hadc1);
 }

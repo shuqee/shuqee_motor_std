@@ -421,6 +421,7 @@ int main(void)
 #endif
 	user_io_init();
 	user_motion_init(); 
+    user_adc_start();
 	user_time_init();
 	user_uart_init();
 	  
@@ -567,7 +568,7 @@ int main(void)
 		/*RST_START*/
 		if (status.spb&0x01)
 		{
-			user_io_stop();
+			user_adc_stop();
 			user_time_stop();
 			user_uart_stop();
 			init_flag = 0;

@@ -43,6 +43,7 @@
 
 
 extern void user_io_init(void);
-extern void user_io_stop(void);
+extern void user_adc_start(void);
+extern void user_adc_stop(void);
 
 #endif /* __USER_IO_H */
