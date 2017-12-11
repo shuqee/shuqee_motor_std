@@ -4,7 +4,7 @@
  *      *** Do not modify ! ***
  *
  * Project: 'shuqee_stm32f103vet6' 
- * Target:  'shuqee_stm32f103vet6 Configuration' 
+ * Target:  'shuqee_stm32f103vet6' 
  */
 
 #ifndef RTE_COMPONENTS_H

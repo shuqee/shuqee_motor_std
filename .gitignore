@@ -1,5 +1,4 @@
 *.mxproject
-/mdk/shuqee_stm32f103vet6.ioc
 *.Administrator
 *.york
 *.lst
@@ -12,3 +11,4 @@
 *.d
 *.dep
 *.o
+*.scratch

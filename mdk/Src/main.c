@@ -31,6 +31,7 @@
   ******************************************************************************
   */
 /* Includes ------------------------------------------------------------------*/
+#include "main.h"
 #include "stm32f1xx_hal.h"
 
 /* USER CODE BEGIN Includes */
@@ -66,9 +67,9 @@ int flag_rst = 0;	//reset flag
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
-//static void SystemClock_Config(void);
 static void MX_ADC1_Init(void);
 static void MX_TIM1_Init(void);
 static void MX_TIM2_Init(void);
@@ -108,14 +109,14 @@ void delay_ms(uint32_t times)
 }
 
 #ifdef ENV_RESET
-void find_origin(void)	//reset function
+void find_origin(void) /* reset function */
 {
 	enum motion_num i;
 	uint8_t downlimit_temp = 0;
 	int def_high[MOTION_COUNT] = {0};
 	int find_origin_step[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
-		flag_rst |= 1<<i;	//初始化复位标�?(缸对应位初始值为1，复位后缸对应位�?0)
+	flag_rst |= 1<<i; /* 初始化复位标�?(缸对应位初始值为1,复位后缸对应位为0) */
 #ifndef MOTION1_ENABLE
 	flag_rst &= ~(1<<MOTION1);
 #endif
@@ -166,7 +167,7 @@ void find_origin(void)	//reset function
 							LED_SEAT3(0);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 1) //缸到底
+						if (downlimit_temp == 1) //缸到�?
 						{
 							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
 							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
@@ -209,11 +210,11 @@ void find_origin(void)	//reset function
 							LED_SEAT3(0);
 							LED_SEAT4(0);
 						}
-						if (motion[i].config.adj == 0) /* 不需要校歿 */
+						if (motion[i].config.adj == 0) /* 不需要校�? */
 							flag_rst &= ~(1<<i);	//标志复位完成
 						else
 						{
-							def_high[i] = motion[i].config.adj * ENV_SPACE;	//弿始往丿
+							def_high[i] = motion[i].config.adj * ENV_SPACE;	//初始化校正高�?
 							++find_origin_step[i];
 						}
 						break;
@@ -232,7 +233,7 @@ void find_origin(void)	//reset function
 						{
 							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
 							def_high[i]--;
-							if(def_high[i] == 0)	//运动到指定位罿
+							if(def_high[i] == 0)	//运动到指定位�?
 							{
 								flag_rst &= ~(1<<i);	//标志复位完成
 							}
@@ -360,6 +361,7 @@ void free_nup(void)
 
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
 #ifdef ENV_SEAT_PICKING
@@ -385,13 +387,13 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_DMA_Init();
-  //SystemClock_Config();
   MX_ADC1_Init();
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_IWDG_Init();
+
   /* USER CODE BEGIN 2 */
 #ifdef ENV_IWDG
   HAL_IWDG_Start(&hiwdg);
@@ -504,11 +506,11 @@ int main(void)
 			if(GET_ID_80())
 				status.id = status.id + 80;
 #ifdef ENV_SEAT_PICKING
-			if (frame.buff[7] == 0xAA)//选中所有座椅
+			if (frame.buff[7] == 0xAA)//选中�?有座�?
 			{
 				seat_picking = 1;
 			}
-			else if (frame.buff[7] == 0x00)//取消选中所有座椅
+			else if (frame.buff[7] == 0x00)//取消选中�?有座�?
 			{
 				seat_picking = 0;
 			}
@@ -518,7 +520,7 @@ int main(void)
 			}
 			else
 			{
-				; /* 维持当前选中或未选中状态 */
+				; /* 维持当前选中或未选中状�?? */
 			}
 #endif
 #ifdef ENV_SEND_SEAT_INFO
@@ -581,6 +583,7 @@ int main(void)
 	}
   }
   /* USER CODE END 3 */
+
 }
 
 /** System Clock Configuration
@@ -592,6 +595,8 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct;
   RCC_PeriphCLKInitTypeDef PeriphClkInit;
 
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
@@ -600,22 +605,38 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
-  HAL_RCC_OscConfig(&RCC_OscInitStruct);
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
-  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_SYSCLK|RCC_CLOCKTYPE_PCLK1
-                              |RCC_CLOCKTYPE_PCLK2;
+    /**Initializes the CPU, AHB and APB busses clocks 
+    */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
   RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV2;
-  HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2);
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
-  HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit);
+  if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
+    /**Configure the Systick interrupt time 
+    */
   HAL_SYSTICK_Config(HAL_RCC_GetHCLKFreq()/1000);
 
+    /**Configure the Systick 
+    */
   HAL_SYSTICK_CLKSourceConfig(SYSTICK_CLKSOURCE_HCLK);
 
   /* SysTick_IRQn interrupt configuration */
@@ -623,7 +644,7 @@ void SystemClock_Config(void)
 }
 
 /* ADC1 init function */
-void MX_ADC1_Init(void)
+static void MX_ADC1_Init(void)
 {
 
   ADC_ChannelConfTypeDef sConfig;
@@ -637,48 +658,66 @@ void MX_ADC1_Init(void)
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
   hadc1.Init.NbrOfConversion = 4;
-  HAL_ADC_Init(&hadc1);
+  if (HAL_ADC_Init(&hadc1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
     /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_0;
   sConfig.Rank = 1;
   sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
-  HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
     /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_1;
   sConfig.Rank = 2;
-  HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
     /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_3;
   sConfig.Rank = 3;
-  HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
     /**Configure Regular Channel 
     */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = 4;
-  HAL_ADC_ConfigChannel(&hadc1, &sConfig);
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /* IWDG init function */
-void MX_IWDG_Init(void)
+static void MX_IWDG_Init(void)
 {
 
   hiwdg.Instance = IWDG;
   hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
   hiwdg.Init.Reload = 4095;
-  HAL_IWDG_Init(&hiwdg);
+  if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /* TIM1 init function */
-void MX_TIM1_Init(void)
+static void MX_TIM1_Init(void)
 {
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
@@ -690,19 +729,28 @@ void MX_TIM1_Init(void)
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
-  HAL_TIM_Base_Init(&htim1);
+  if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig);
+  if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig);
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /* TIM2 init function */
-void MX_TIM2_Init(void)
+static void MX_TIM2_Init(void)
 {
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
@@ -713,19 +761,28 @@ void MX_TIM2_Init(void)
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  HAL_TIM_Base_Init(&htim2);
+  if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig);
+  if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig);
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /* TIM3 init function */
-void MX_TIM3_Init(void)
+static void MX_TIM3_Init(void)
 {
 
   TIM_ClockConfigTypeDef sClockSourceConfig;
@@ -736,19 +793,28 @@ void MX_TIM3_Init(void)
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  HAL_TIM_Base_Init(&htim3);
+  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig);
+  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig);
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /* USART1 init function */
-void MX_USART1_UART_Init(void)
+static void MX_USART1_UART_Init(void)
 {
 
   huart1.Instance = USART1;
@@ -759,19 +825,23 @@ void MX_USART1_UART_Init(void)
   huart1.Init.Mode = UART_MODE_TX_RX;
   huart1.Init.HwFlowCtl = UART_HWCONTROL_NONE;
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
-  HAL_UART_Init(&huart1);
+  if (HAL_UART_Init(&huart1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
 }
 
 /** 
   * Enable DMA controller clock
   */
-void MX_DMA_Init(void) 
+static void MX_DMA_Init(void) 
 {
   /* DMA controller clock enable */
   __HAL_RCC_DMA1_CLK_ENABLE();
 
   /* DMA interrupt init */
+  /* DMA1_Channel1_IRQn interrupt configuration */
   HAL_NVIC_SetPriority(DMA1_Channel1_IRQn, 4, 0);
   HAL_NVIC_EnableIRQ(DMA1_Channel1_IRQn);
 
@@ -784,22 +854,47 @@ void MX_DMA_Init(void)
         * EVENT_OUT
         * EXTI
 */
-void MX_GPIO_Init(void)
+static void MX_GPIO_Init(void)
 {
 
   GPIO_InitTypeDef GPIO_InitStruct;
 
   /* GPIO Ports Clock Enable */
-  __GPIOE_CLK_ENABLE();
-  __GPIOC_CLK_ENABLE();
-  __GPIOA_CLK_ENABLE();
-  __GPIOB_CLK_ENABLE();
-  __GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOE_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, OUTPUT_SEATLED2_Pin|OUTPUT_SEATLED1_Pin|OUTPUT_CLR1_Pin|OUTPUT_DIR3_Pin 
+                          |OUTPUT_DIR2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOA, OUTPUT_PUL1_Pin|OUTPUT_573LE2_Pin|OUTPUT_CLR2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, OUTPUT_PUL2_Pin|OUTPUT_LED0_Pin|OUTPUT_LED1_Pin|OUTPUT_PUL3_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin|OUTPUT_NUP3_Pin 
+                          |OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin 
+                          |OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, OUTPUT_SP8_Pin|OUTPUT_SP7_Pin|OUTPUT_SP6_Pin|OUTPUT_SP5_Pin 
+                          |OUTPUT_SP4_Pin|OUTPUT_SP3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pins : OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin */
   GPIO_InitStruct.Pin = OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OUTPUT_SEATLED2_Pin OUTPUT_SEATLED1_Pin OUTPUT_CLR1_Pin OUTPUT_DIR3_Pin 
@@ -807,7 +902,7 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Pin = OUTPUT_SEATLED2_Pin|OUTPUT_SEATLED1_Pin|OUTPUT_CLR1_Pin|OUTPUT_DIR3_Pin 
                           |OUTPUT_DIR2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : EXTI_UPLIMIT1_Pin EXTI_DOWNLIMIT1_Pin EXTI_UPLIMIT2_Pin EXTI_DOWNLIMIT2_Pin 
@@ -821,7 +916,7 @@ void MX_GPIO_Init(void)
   /*Configure GPIO pins : OUTPUT_PUL1_Pin OUTPUT_485RW_Pin OUTPUT_573LE2_Pin OUTPUT_CLR2_Pin */
   GPIO_InitStruct.Pin = OUTPUT_PUL1_Pin|OUTPUT_485RW_Pin|OUTPUT_573LE2_Pin|OUTPUT_CLR2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
   /*Configure GPIO pins : OUTPUT_PUL2_Pin OUTPUT_LED0_Pin OUTPUT_LED1_Pin OUTPUT_SP8_Pin 
@@ -831,7 +926,7 @@ void MX_GPIO_Init(void)
                           |OUTPUT_SP7_Pin|OUTPUT_SP6_Pin|OUTPUT_SP5_Pin|OUTPUT_SP4_Pin 
                           |OUTPUT_PUL3_Pin|OUTPUT_SP3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : INPUT_SW_Pin */
@@ -847,7 +942,7 @@ void MX_GPIO_Init(void)
                           |OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin 
                           |OUTPUT_NDOWN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Speed = GPIO_SPEED_HIGH;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 
   /*Configure GPIO pins : INPUT_BCD1_1_Pin INPUT_BCD2_1_Pin INPUT_BCD4_1_Pin INPUT_BCD8_1_Pin */
@@ -886,6 +981,21 @@ void MX_GPIO_Init(void)
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @param  None
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler */
+  /* User can add his own implementation to report the HAL error return state */
+  while(1) 
+  {
+  }
+  /* USER CODE END Error_Handler */ 
+}
 
 #ifdef USE_FULL_ASSERT
 
