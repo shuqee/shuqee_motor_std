@@ -3,6 +3,11 @@
   * File Name          : main.c
   * Description        : Main program body
   ******************************************************************************
+  ** This notice applies to any and all portions of this file
+  * that are not between comment pairs USER CODE BEGIN and
+  * USER CODE END. Other portions of this file, whether 
+  * inserted by the user or by software development tools
+  * are owned by their respective copyright owners.
   *
   * COPYRIGHT(c) 2017 STMicroelectronics
   *
@@ -30,6 +35,7 @@
   *
   ******************************************************************************
   */
+
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "stm32f1xx_hal.h"
@@ -67,7 +73,6 @@ int flag_rst = 0;	//reset flag
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
-void Error_Handler(void);
 static void MX_GPIO_Init(void);
 static void MX_DMA_Init(void);
 static void MX_ADC1_Init(void);
@@ -116,7 +121,7 @@ void find_origin(void) /* reset function */
 	int def_high[MOTION_COUNT] = {0};
 	int find_origin_step[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
-	flag_rst |= 1<<i; /* 初始化复位标�?(缸对应位初始值为1,复位后缸对应位为0) */
+	flag_rst |= 1<<i; /* 初始化复位标志(缸对应位初始值为1,复位后缸对应位为0) */
 #ifndef MOTION1_ENABLE
 	flag_rst &= ~(1<<MOTION1);
 #endif
@@ -126,11 +131,11 @@ void find_origin(void) /* reset function */
 #ifndef MOTION3_ENABLE
 	flag_rst &= ~(1<<MOTION3);
 #endif
-	while(flag_rst)	//仍有缸未复位
+	while(flag_rst)	/* 仍有缸未复位 */
 	{
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0)	//未复�?
+			if((flag_rst&(1<<i)) != 0)	/* 未复位 */
 			{
 				SAFE(downlimit_temp = status.downlimit[i]);
 				switch (find_origin_step[i])
@@ -146,10 +151,10 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(1);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 0) //缸未到底
+						if (downlimit_temp == 0) /* 缸未到底 */
 						{
-							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
-							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
+							set_pul(i, (GPIO_PinState)1, 200, 1); /* 向下运动 */
 						}
 						else
 						{
@@ -167,10 +172,10 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 1) //缸到�?
+						if (downlimit_temp == 1) /* 缸到底 */
 						{
-							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
-							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
+							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
 						}
 						else
 						{
@@ -188,14 +193,14 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(1);
 							LED_SEAT4(0);
 						}
-						if (downlimit_temp == 0) //缸未到底
+						if (downlimit_temp == 0) /* 缸未到底 */
 						{
-							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
-							set_pul(i, (GPIO_PinState)1, 200, 1);	//向下运动
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
+							set_pul(i, (GPIO_PinState)1, 200, 1); /* 向下运动 */
 						}
 						else
 						{
-							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
 							++find_origin_step[i];
 						}
 						break;
@@ -210,11 +215,11 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(0);
 						}
-						if (motion[i].config.adj == 0) /* 不需要校�? */
-							flag_rst &= ~(1<<i);	//标志复位完成
+						if (motion[i].config.adj == 0) /* 不需要校正 */
+							flag_rst &= ~(1<<i); /* 标志复位完成 */
 						else
 						{
-							def_high[i] = motion[i].config.adj * ENV_SPACE;	//初始化校正高�?
+							def_high[i] = motion[i].config.adj * ENV_SPACE;	/* 初始化校正高度 */
 							++find_origin_step[i];
 						}
 						break;
@@ -231,11 +236,11 @@ void find_origin(void) /* reset function */
 						}
 						if(def_high[i] != 0)
 						{
-							set_pul(i, (GPIO_PinState)0, 200, 1);	//向上运动
+							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
 							def_high[i]--;
-							if(def_high[i] == 0)	//运动到指定位�?
+							if(def_high[i] == 0) /* 运动到指定位置 */
 							{
-								flag_rst &= ~(1<<i);	//标志复位完成
+								flag_rst &= ~(1<<i); /* 标志复位完成 */
 							}
 						}
 						break;
@@ -310,7 +315,7 @@ void user_motion_init(void)
 		motion[i].index = i;
 		motion[i].high.set = motion[i].config.origin * ENV_SPACE;
 		if (motion[i].config.dir == GPIO_PIN_SET) /* 如果脉冲方向取反 */
-			exchange_nup_ndown(i); /* 正反转禁止对应引脚取�? */
+			exchange_nup_ndown(i); /* 正反转禁止对应引脚取反 */
 	}
 #ifdef ENV_RESET
 	find_origin();
@@ -324,7 +329,7 @@ void free_ndown(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (motion[i].high.now >= 0 * ENV_SPACE)
-			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
 	}
 }
 void free_nup(void)
@@ -333,7 +338,7 @@ void free_nup(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (motion[i].high.now <= 255 * ENV_SPACE)
-			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
 	}
 }
 #else
@@ -343,7 +348,7 @@ void free_ndown(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (status.downlimit[i] == 0)
-			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET);//允许下降
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
 	}
 }
 void free_nup(void)
@@ -352,7 +357,7 @@ void free_nup(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (status.uplimit[i] == 0)
-			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET);//允许上升
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
 	}
 }
 #endif
@@ -369,11 +374,11 @@ int main(void)
 #endif
 #ifdef ENV_SEND_SEAT_INFO
 	static uint8_t send_seat = 0;
-	static uint8_t send_buf[4] = {0xff,0xc1};	//回复帧头
+	static uint8_t send_buf[4] = {0xff,0xc1}; /* 回复帧头 */
 	static int send_index = 0;
 #endif
-	uint8_t update;										//串口数据更新标志
-	uint8_t init_flag = 0; //初始化标准位
+	uint8_t update; /* 串口数据更新标志 */
+	uint8_t init_flag = 0; /* 初始化标准位 */
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -381,8 +386,16 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
   /* Configure the system clock */
   SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+#ifdef ENV_IWDG
+  /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
@@ -395,8 +408,18 @@ int main(void)
   MX_IWDG_Init();
 
   /* USER CODE BEGIN 2 */
-#ifdef ENV_IWDG
-  HAL_IWDG_Start(&hiwdg);
+#else
+
+  /* Initialize all configured peripherals */
+  MX_GPIO_Init();
+  MX_DMA_Init();
+  MX_ADC1_Init();
+  MX_TIM1_Init();
+  MX_TIM2_Init();
+  MX_TIM3_Init();
+  MX_USART1_UART_Init();
+  /* MX_IWDG_Init(); */
+
 #endif
   /* USER CODE END 2 */
 
@@ -439,7 +462,7 @@ int main(void)
 		SAFE(update = frame.enable);
 		SAFE(free_ndown());
 		SAFE(free_nup());
-		if(update)	//串口数据更新
+		if(update) /* 串口数据更新 */
 		{
 			SAFE(frame.enable = 0);
 			/*LED_START*/
@@ -447,48 +470,48 @@ int main(void)
 			led_count = led_count%10;
 			if(led_count == 0)
 			{
-				LED_TOGGLE();	//闪烁指示�?
+				LED_TOGGLE(); /* 闪烁指示灯 */
 			}
 			/*LED_END*/
 			/*SEAT_START*/
 #ifdef ENV_SEAT_PICKING
-			if (seat_picking == 0)//座椅未被选中
+			if (seat_picking == 0) /* 座椅未被选中 */
 			{
 				status.seat_enable = 0;
 			}
 #endif
-			if(status.seat_enable)//座椅使能
+			if(status.seat_enable) /* 座椅使能 */
 			{
-				SAFE(status.spb = frame.buff[5]);//更新特效
+				SAFE(status.spb = frame.buff[5]); /* 更新特效 */
 #ifdef MOTION1_ENABLE
-				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE);//更新目标位置
+				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* 更新目标位置 */
 #else
-				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* 恢复目标位置 */
 #endif
 #ifdef MOTION2_ENABLE
-				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE);//更新目标位置
+				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* 更新目标位置 */
 #else
-				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* 恢复目标位置 */
 #endif
 #ifdef MOTION3_ENABLE
-				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE);//更新目标位置
+				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* 更新目标位置 */
 #else
-				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);//恢复目标位置
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* 恢复目标位置 */
 #endif
 			}
 			else
 			{
-				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE);//恢复目标位置
-				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE);//恢复目标位置
-				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE);//恢复目标位置
-				SAFE(status.spb = frame.buff[5]);//更新特效
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* 恢复目标位置 */
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* 恢复目标位置 */
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* 恢复目标位置 */
+				SAFE(status.spb = frame.buff[5]); /* 更新特效 */
 #ifdef ENV_SWING_LINK
-				SAFE(status.spb &= SPB_AIR_INJECTION_MASK);//恢复特效
+				SAFE(status.spb &= SPB_AIR_INJECTION_MASK); /* 恢复特效 */
 #else
-				SAFE(status.spb = 0);//恢复特效
+				SAFE(status.spb = 0); /* 恢复特效 */
 #endif
 			}
-			status.id = 0;//更新id
+			status.id = 0; /* 更新id */
 			if(GET_ID_1())
 				status.id = status.id + 1;
 			if(GET_ID_2())
@@ -506,25 +529,25 @@ int main(void)
 			if(GET_ID_80())
 				status.id = status.id + 80;
 #ifdef ENV_SEAT_PICKING
-			if (frame.buff[7] == 0xAA)//选中�?有座�?
+			if (frame.buff[7] == 0xAA) /* 选中所有座椅 */
 			{
 				seat_picking = 1;
 			}
-			else if (frame.buff[7] == 0x00)//取消选中�?有座�?
+			else if (frame.buff[7] == 0x00) /* 取消选中所有座椅 */
 			{
 				seat_picking = 0;
 			}
-			else if (frame.buff[7] == status.id)//根据ID选中座椅
+			else if (frame.buff[7] == status.id) /* 根据ID选中座椅 */
 			{
 				seat_picking = 1;
 			}
 			else
 			{
-				; /* 维持当前选中或未选中状�?? */
+				; /* 维持当前选中或未选中状态 */
 			}
 #endif
 #ifdef ENV_SEND_SEAT_INFO
-			if(frame.buff[7] == status.id)//判断座椅编号
+			if(frame.buff[7] == status.id) /* 判断座椅编号 */
 			{
 				if (frame.buff[7] != 0x00)
 				{
@@ -540,7 +563,7 @@ int main(void)
 #ifdef ENV_SEND_SEAT_INFO
 		if(send_seat)
 		{
-			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET);//485发�??
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485发送 */
 			if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 			{
 				huart1.Instance->DR = send_buf[send_index];
@@ -555,12 +578,12 @@ int main(void)
 		else
 		{
 			if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
-			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);//485接收
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET); /* 485接收 */
 		}
 #endif
 		/*SEND_SEAT_END*/
 		/*SPB_START*/
-		SPB3(status.spb&(1<<2));	//更新特效到IO输出
+		SPB3(status.spb&(1<<2)); /* 更新特效到IO输出 */
 		SPB4(status.spb&(1<<3));
 		SPB5(status.spb&(1<<4));
 		SPB6(status.spb&(1<<5));
@@ -578,7 +601,7 @@ int main(void)
 		else
 		{
 			/*RST_END*/
-			HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);//防止串口出错
+			HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1); /* 防止串口出错 */
 		}
 	}
   }
@@ -607,7 +630,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Initializes the CPU, AHB and APB busses clocks 
@@ -621,14 +644,14 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV8;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure the Systick interrupt time 
@@ -660,7 +683,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.NbrOfConversion = 4;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure Regular Channel 
@@ -670,7 +693,7 @@ static void MX_ADC1_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_239CYCLES_5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure Regular Channel 
@@ -679,7 +702,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure Regular Channel 
@@ -688,7 +711,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
     /**Configure Regular Channel 
@@ -697,7 +720,7 @@ static void MX_ADC1_Init(void)
   sConfig.Rank = 4;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -711,7 +734,7 @@ static void MX_IWDG_Init(void)
   hiwdg.Init.Reload = 4095;
   if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -729,22 +752,23 @@ static void MX_TIM1_Init(void)
   htim1.Init.Period = 999;
   htim1.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
   htim1.Init.RepetitionCounter = 0;
+  htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim1, &sClockSourceConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -761,22 +785,23 @@ static void MX_TIM2_Init(void)
   htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim2.Init.Period = 999;
   htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -793,22 +818,23 @@ static void MX_TIM3_Init(void)
   htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim3.Init.Period = 999;
   htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
   if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
   if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -827,7 +853,7 @@ static void MX_USART1_UART_Init(void)
   huart1.Init.OverSampling = UART_OVERSAMPLING_16;
   if (HAL_UART_Init(&huart1) != HAL_OK)
   {
-    Error_Handler();
+    _Error_Handler(__FILE__, __LINE__);
   }
 
 }
@@ -987,14 +1013,14 @@ static void MX_GPIO_Init(void)
   * @param  None
   * @retval None
   */
-void Error_Handler(void)
+void _Error_Handler(char * file, int line)
 {
-  /* USER CODE BEGIN Error_Handler */
+  /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   while(1) 
   {
   }
-  /* USER CODE END Error_Handler */ 
+  /* USER CODE END Error_Handler_Debug */ 
 }
 
 #ifdef USE_FULL_ASSERT
