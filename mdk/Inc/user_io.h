@@ -5,6 +5,7 @@
 #define LED_SEAT2(x) HAL_GPIO_WritePin(OUTPUT_SEATLED2_GPIO_Port, OUTPUT_SEATLED2_Pin, (GPIO_PinState)(!(x)))
 #define LED_SEAT3(x) HAL_GPIO_WritePin(OUTPUT_SEATLED3_GPIO_Port, OUTPUT_SEATLED3_Pin, (GPIO_PinState)(!(x)))
 #define LED_SEAT4(x) HAL_GPIO_WritePin(OUTPUT_SEATLED4_GPIO_Port, OUTPUT_SEATLED4_Pin, (GPIO_PinState)(!(x)))
+#define LED_SEAT5(x) HAL_GPIO_WritePin(OUTPUT_SEATLED5_GPIO_Port, OUTPUT_SEATLED5_Pin, (GPIO_PinState)(!(x)))
 
 #define LED(x) do{ \
 	HAL_GPIO_WritePin(OUTPUT_LED0_GPIO_Port, OUTPUT_LED0_Pin, (GPIO_PinState)(!(x))); \

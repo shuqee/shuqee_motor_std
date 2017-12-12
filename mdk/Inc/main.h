@@ -47,6 +47,8 @@
 
 /* Private define ------------------------------------------------------------*/
 
+#define OUTPUT_SEATLED5_Pin GPIO_PIN_3
+#define OUTPUT_SEATLED5_GPIO_Port GPIOE
 #define OUTPUT_SEATLED4_Pin GPIO_PIN_4
 #define OUTPUT_SEATLED4_GPIO_Port GPIOE
 #define OUTPUT_SEATLED3_Pin GPIO_PIN_5
@@ -79,6 +81,8 @@
 #define ADC_SEAT3_GPIO_Port GPIOA
 #define ADC_SEAT4_Pin GPIO_PIN_4
 #define ADC_SEAT4_GPIO_Port GPIOA
+#define ADC_SEAT5_Pin GPIO_PIN_5
+#define ADC_SEAT5_GPIO_Port GPIOA
 #define EXTI_UPLIMIT3_Pin GPIO_PIN_4
 #define EXTI_UPLIMIT3_GPIO_Port GPIOC
 #define EXTI_UPLIMIT3_EXTI_IRQn EXTI4_IRQn

@@ -5,10 +5,23 @@
 #include <string.h>
 
 #define ADC_TH 0x03e8
+#define ADC_BUFF_SIZE 5
+#define SEAT_COUNT 5
+
+enum adc_item
+{
+	ADC_ITEM_SEAT1 = 0,
+	ADC_ITEM_SEAT2,
+	ADC_ITEM_SEAT3,
+	ADC_ITEM_SEAT4,
+	ADC_ITEM_SEAT5,
+	ADC_ITEM_COUNT
+};
 
 extern int flag_rst;
 
-static uint16_t adc[5][4];
+static __IO uint16_t adc_buf[ADC_BUFF_SIZE][ADC_ITEM_COUNT] = {0};
+static __IO uint16_t adc_result[ADC_ITEM_COUNT] = {0};
 
 extern ADC_HandleTypeDef hadc1;
 extern DMA_HandleTypeDef hdma_adc1;
@@ -39,13 +52,15 @@ void user_io_init(void)
 	HAL_GPIO_WritePin(OUTPUT_CLR2_GPIO_Port, OUTPUT_CLR2_Pin, GPIO_PIN_SET);//消除警报
 	HAL_GPIO_WritePin(OUTPUT_CLR3_GPIO_Port, OUTPUT_CLR3_Pin, GPIO_PIN_SET);//消除警报
 	
-	memset((void *)adc, 0, sizeof(adc));
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc, 20);
+	memset((void *)adc_buf, 0, sizeof(adc_buf));
+	memset((void *)adc_result, 0, sizeof(adc_result));
+	HAL_ADCEx_Calibration_Start(&hadc1);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buf, ADC_BUFF_SIZE*ADC_ITEM_COUNT);
 }
 
 void user_adc_start(void)
 {
-	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc, 20);
+	HAL_ADC_Start_DMA(&hadc1, (uint32_t *)adc_buf, ADC_BUFF_SIZE*ADC_ITEM_COUNT);
 }
 
 void user_adc_stop(void)
@@ -55,15 +70,27 @@ void user_adc_stop(void)
 
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 {
-	uint16_t adc_tmp;
+	int i,j;
+	uint32_t sum = 0;
+	uint32_t avg;
+	static int delay_count[SEAT_COUNT] = {0};
 	uint16_t seat_num_tmp = 0;
-	static int delay_count[4] = {0};
-	int i;
 	
-	for(i=0; i<4; i++)
+	(void)hadc;
+	for(i=0; i<ADC_ITEM_COUNT; i++)
 	{
-		adc_tmp = (adc[0][i] + adc[1][i] + adc[2][i] + adc[3][i] + adc[4][i])/5;
-		if(adc_tmp < ADC_TH)
+		sum = 0;
+		for(j=0; j<ADC_BUFF_SIZE; j++)
+		{
+			sum = sum + (uint32_t)adc_buf[j][i];
+		}
+		avg = sum/ADC_BUFF_SIZE;
+		adc_result[i] = (uint16_t)avg;
+	}
+	
+	for(i=0; i<SEAT_COUNT; i++)
+	{
+		if(adc_result[i] < ADC_TH)
 			delay_count[i] = 1000;
 		else
 		{
@@ -72,7 +99,7 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		}
 	}
 	
-	for(i=0; i<4; i++)
+	for(i=0; i<SEAT_COUNT; i++)
 	{
 		if(delay_count[i])
 			seat_num_tmp++;
@@ -97,6 +124,11 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		LED_SEAT4(1);
 	else
 		LED_SEAT4(0);
+	
+	if(delay_count[4])
+		LED_SEAT5(1);
+	else
+		LED_SEAT5(0);
 	
 	status.seat_num = seat_num_tmp;
 }

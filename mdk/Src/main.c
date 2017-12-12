@@ -680,7 +680,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 4;
+  hadc1.Init.NbrOfConversion = 5;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -718,6 +718,15 @@ static void MX_ADC1_Init(void)
     */
   sConfig.Channel = ADC_CHANNEL_4;
   sConfig.Rank = 4;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_5;
+  sConfig.Rank = 5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -893,7 +902,7 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, OUTPUT_SEATLED2_Pin|OUTPUT_SEATLED1_Pin|OUTPUT_CLR1_Pin|OUTPUT_DIR3_Pin 
@@ -917,8 +926,8 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, OUTPUT_SP8_Pin|OUTPUT_SP7_Pin|OUTPUT_SP6_Pin|OUTPUT_SP5_Pin 
                           |OUTPUT_SP4_Pin|OUTPUT_SP3_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin;
+  /*Configure GPIO pins : OUTPUT_SEATLED5_Pin OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
