@@ -62,7 +62,6 @@ UART_HandleTypeDef huart1;
 struct motion_status motion[MOTION_COUNT] = {MOTION1};
 struct status status = {0};
 int flag_rst = 0;	//reset flag
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -389,7 +388,7 @@ int main(void)
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
-
+  
   /* Configure the system clock */
   SystemClock_Config();
 
@@ -514,6 +513,8 @@ int main(void)
 				status.id = status.id + 40;
 			if(GET_ID_80())
 				status.id = status.id + 80;
+
+			
 #ifdef ENV_SEAT_PICKING
 			if (frame.buff[7] == 0xAA)//选中�?有座�?
 			{
