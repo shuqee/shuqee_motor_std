@@ -27,13 +27,12 @@
 	#define MOTION1_CONFIG_ORIGIN	0
 	#define MOTION2_CONFIG_ORIGIN	0
 	#define MOTION3_CONFIG_ORIGIN	0
-	#define MOTION1_CONFIG_ADJ		10
-	#define MOTION2_CONFIG_ADJ		10
-	#define MOTION3_CONFIG_ADJ		10
-	
-	#define ENV_CYLINDER_STROKE 150.0 /* 电动缸行程(150mm) */
-	#define ENV_CYLINDER_REDUCTION_RATIO (1.5/1.0) /* 电动缸减速比(1.5:1) */
-	#define ENV_CYLINDER_SCREW_LEAD 5.0 /* 电动缸丝杆导程(5mm) */
+	#define MOTION1_CONFIG_ADJ		5
+	#define MOTION2_CONFIG_ADJ		5
+	#define MOTION3_CONFIG_ADJ		5
+	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(150mm) */
+	#define ENV_CYLINDER_REDUCTION_RATIO (1.8/1.0) /* 电动缸减速比(1.5:1) */
+	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(5mm) */
 	#define ENV_ELECTRONIC_GEAR_RATIO 40.0 /* 驱动器电子齿轮比(fn050:40) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	
@@ -43,9 +42,10 @@
 										       /ENV_ELECTRONIC_GEAR_RATIO \
 										       /256.0 \
 	                         *ENV_CYLINDER_STROKE_PERCENT)) /* 位置扩大倍数 */
-	//#define ENV_SPACE 46                  //位置扩大倍数
-	/* 150cm行程的时候ENV_SPACE取40 */
-	//#define ENV_SPACE 40                  //位置扩大倍数
+	/* 170CM行程的时候EVN_SPACE 取46*/
+//	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
+	/* 150cm行程的时候ENV_SPACE取40 */ 
+	
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 #endif
