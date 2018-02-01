@@ -154,7 +154,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 0) /* 缸未到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
-							set_pul(i, (GPIO_PinState)1, 200, 1); /* 向下运动 */
+							set_pul(i, (GPIO_PinState)1, 800, 1); /* 向下运动 */
 						}
 						else
 						{
@@ -175,7 +175,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 1) /* 缸到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
-							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
+							set_pul(i, (GPIO_PinState)0, 800, 1); /* 向上运动 */
 						}
 						else
 						{
@@ -196,7 +196,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 0) /* 缸未到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
-							set_pul(i, (GPIO_PinState)1, 200, 1); /* 向下运动 */
+							set_pul(i, (GPIO_PinState)1, 800, 1); /* 向下运动 */
 						}
 						else
 						{
@@ -236,7 +236,7 @@ void find_origin(void) /* reset function */
 						}
 						if(def_high[i] != 0)
 						{
-							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
+							set_pul(i, (GPIO_PinState)0, 800, 1); /* 向上运动 */
 							def_high[i]--;
 							if(def_high[i] == 0) /* 运动到指定位置 */
 							{

@@ -27,13 +27,13 @@ void set_pul(enum motion_num index, GPIO_PinState dir, uint16_t speed, uint32_t 
 	if (motion[index].config.dir == GPIO_PIN_SET)
 		dir = (dir == GPIO_PIN_RESET)?GPIO_PIN_SET:GPIO_PIN_RESET; /* 取反 */
 	HAL_GPIO_WritePin(motion[index].io.dir_port, motion[index].io.dir_pin, dir);
-	delay_us(speed*4);
+	delay_us(speed);
 	for(i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		HAL_GPIO_WritePin(motion[index].io.pul_port, motion[index].io.pul_pin, GPIO_PIN_RESET);
-		delay_us(speed*4);
+		delay_us(speed);
 		HAL_GPIO_WritePin(motion[index].io.pul_port, motion[index].io.pul_pin, GPIO_PIN_SET);
-		delay_us(speed*4);
+		delay_us(speed);
 	}
 }
 #endif

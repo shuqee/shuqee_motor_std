@@ -30,7 +30,7 @@
 	#define MOTION1_CONFIG_ADJ		5
 	#define MOTION2_CONFIG_ADJ		5
 	#define MOTION3_CONFIG_ADJ		5
-	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(150mm) */
+	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(170mm) */
 	#define ENV_CYLINDER_REDUCTION_RATIO (1.8/1.0) /* 电动缸减速比(1.5:1) */
 	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(5mm) */
 	#define ENV_ELECTRONIC_GEAR_RATIO 40.0 /* 驱动器电子齿轮比(fn050:40) */
