@@ -7,6 +7,8 @@
 
 #define ENV_IWDG
 
+#define ENV_RESET_SPEED 800 //ENV_RESET_SPEED越大复位速度越慢
+
 #define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
 //#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式

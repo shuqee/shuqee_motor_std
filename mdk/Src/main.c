@@ -120,6 +120,7 @@ void find_origin(void) /* reset function */
 	uint8_t downlimit_temp = 0;
 	int def_high[MOTION_COUNT] = {0};
 	int find_origin_step[MOTION_COUNT] = {0};
+	uint8_t not_reset_num = 0; /* 未复位缸的数量 */
 	for(i=MOTION1; i<MOTION_COUNT; i++)
 	flag_rst |= 1<<i; /* 初始化复位标志(缸对应位初始值为1,复位后缸对应位为0) */
 #ifndef MOTION1_ENABLE
@@ -133,9 +134,17 @@ void find_origin(void) /* reset function */
 #endif
 	while(flag_rst)	/* 仍有缸未复位 */
 	{
+		not_reset_num = 0;
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0)	/* 未复位 */
+			if((flag_rst&(1<<i)) != 0) /* 未复位 */
+			{
+				not_reset_num += 1;
+			}
+		}
+		for(i=MOTION1; i<MOTION_COUNT; i++)
+		{
+			if((flag_rst&(1<<i)) != 0) /* 未复位 */
 			{
 				SAFE(downlimit_temp = status.downlimit[i]);
 				switch (find_origin_step[i])
@@ -154,7 +163,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 0) /* 缸未到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
-							set_pul(i, (GPIO_PinState)1, 800, 1); /* 向下运动 */
+							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* 向下运动 */
 						}
 						else
 						{
@@ -175,7 +184,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 1) /* 缸到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
-							set_pul(i, (GPIO_PinState)0, 800, 1); /* 向上运动 */
+							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* 向上运动 */
 						}
 						else
 						{
@@ -196,7 +205,7 @@ void find_origin(void) /* reset function */
 						if (downlimit_temp == 0) /* 缸未到底 */
 						{
 							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* 允许下降 */
-							set_pul(i, (GPIO_PinState)1, 800, 1); /* 向下运动 */
+							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* 向下运动 */
 						}
 						else
 						{
@@ -236,7 +245,7 @@ void find_origin(void) /* reset function */
 						}
 						if(def_high[i] != 0)
 						{
-							set_pul(i, (GPIO_PinState)0, 800, 1); /* 向上运动 */
+							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* 向上运动 */
 							def_high[i]--;
 							if(def_high[i] == 0) /* 运动到指定位置 */
 							{
