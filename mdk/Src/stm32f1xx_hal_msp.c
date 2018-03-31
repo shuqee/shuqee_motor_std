@@ -10,7 +10,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -100,10 +100,11 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* hadc)
     PA1     ------> ADC1_IN1
     PA3     ------> ADC1_IN3
     PA4     ------> ADC1_IN4
-    PA5     ------> ADC1_IN5 
+    PA5     ------> ADC1_IN5
+    PA6     ------> ADC1_IN6 
     */
     GPIO_InitStruct.Pin = ADC_SEAT1_Pin|ADC_SEAT2_Pin|ADC_SEAT3_Pin|ADC_SEAT4_Pin 
-                          |ADC_SEAT5_Pin;
+                          |ADC_SEAT5_Pin|ADC_SEAT6_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_ANALOG;
     HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
@@ -147,10 +148,11 @@ void HAL_ADC_MspDeInit(ADC_HandleTypeDef* hadc)
     PA1     ------> ADC1_IN1
     PA3     ------> ADC1_IN3
     PA4     ------> ADC1_IN4
-    PA5     ------> ADC1_IN5 
+    PA5     ------> ADC1_IN5
+    PA6     ------> ADC1_IN6 
     */
     HAL_GPIO_DeInit(GPIOA, ADC_SEAT1_Pin|ADC_SEAT2_Pin|ADC_SEAT3_Pin|ADC_SEAT4_Pin 
-                          |ADC_SEAT5_Pin);
+                          |ADC_SEAT5_Pin|ADC_SEAT6_Pin);
 
     /* ADC1 DMA DeInit */
     HAL_DMA_DeInit(hadc->DMA_Handle);

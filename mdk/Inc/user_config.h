@@ -9,15 +9,15 @@
 
 //#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
-//#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
-#define ENV_2DOF	           //二自由度平台摆杆式
+#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
+//#define ENV_2DOF	           //二自由度平台摆杆式
 
-#define ENV_SEAT_PICKING //选座功能(根据ID使能座椅)
+//#define ENV_SEAT_PICKING //选座功能(根据ID使能座椅)
 //#define ENV_SEND_SEAT_INFO //统计人数功能(根据ID使能反馈座椅人数功能)
 
 #ifdef ENV_3DOF_NO_SENSOR
-	#define ENV_NOSENSOR	//没有传感器
-	#define ENV_RESET	//复位
+	#define ENV_NOSENSOR	//
+	
 	#define MOTION1_ENABLE
 	#define MOTION2_ENABLE
 	#define MOTION3_ENABLE
@@ -30,9 +30,9 @@
 	#define MOTION1_CONFIG_ADJ		10
 	#define MOTION2_CONFIG_ADJ		10
 	#define MOTION3_CONFIG_ADJ		10
-	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
+//	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
 	/* 150cm行程的时候ENV_SPACE取40 */
-	//#define ENV_SPACE 40                  //位置扩大倍数为2的ENV_SPACE次方
+	#define ENV_SPACE 40                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 #endif
@@ -58,6 +58,8 @@
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 	/* 高速 */
 //	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)8)
+	/*是否开启24V传感器的检测*/
+	#define ENV_24V_SENOR
 #endif
 
 #ifdef ENV_2DOF
@@ -77,6 +79,8 @@
 	#define ENV_SPACE 25                  //位置扩大倍数为2的ENV_SPACE次方
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
+	/*是否开启24V传感器的检测*/
+	#define ENV_24V_SENOR
 #endif
 
 #define SPB_AIR_INJECTION_MASK (0x1<<6)

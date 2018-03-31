@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -121,7 +121,7 @@ void find_origin(void) /* reset function */
 	int def_high[MOTION_COUNT] = {0};
 	int find_origin_step[MOTION_COUNT] = {0};
 	for(i=MOTION1; i<MOTION_COUNT; i++)
-	flag_rst |= 1<<i; /* 初始化复位标志(缸对应位初始值为1,复位后缸对应位为0) */
+	flag_rst |= 1<<i; /* 初始化复位标�?(缸对应位初始值为1,复位后缸对应位为0) */
 #ifndef MOTION1_ENABLE
 	flag_rst &= ~(1<<MOTION1);
 #endif
@@ -135,7 +135,7 @@ void find_origin(void) /* reset function */
 	{
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0)	/* 未复位 */
+			if((flag_rst&(1<<i)) != 0)	/* 未复�? */
 			{
 				SAFE(downlimit_temp = status.downlimit[i]);
 				switch (find_origin_step[i])
@@ -172,7 +172,7 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 1) /* 缸到底 */
+						if (downlimit_temp == 1) /* 缸到�? */
 						{
 							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* 允许上升 */
 							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
@@ -215,11 +215,11 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(0);
 						}
-						if (motion[i].config.adj == 0) /* 不需要校正 */
+						if (motion[i].config.adj == 0) /* 不需要校�? */
 							flag_rst &= ~(1<<i); /* 标志复位完成 */
 						else
 						{
-							def_high[i] = motion[i].config.adj * ENV_SPACE;	/* 初始化校正高度 */
+							def_high[i] = motion[i].config.adj * ENV_SPACE;	/* 初始化校正高�? */
 							++find_origin_step[i];
 						}
 						break;
@@ -238,7 +238,7 @@ void find_origin(void) /* reset function */
 						{
 							set_pul(i, (GPIO_PinState)0, 200, 1); /* 向上运动 */
 							def_high[i]--;
-							if(def_high[i] == 0) /* 运动到指定位置 */
+							if(def_high[i] == 0) /* 运动到指定位�? */
 							{
 								flag_rst &= ~(1<<i); /* 标志复位完成 */
 							}
@@ -315,7 +315,7 @@ void user_motion_init(void)
 		motion[i].index = i;
 		motion[i].high.set = motion[i].config.origin * ENV_SPACE;
 		if (motion[i].config.dir == GPIO_PIN_SET) /* 如果脉冲方向取反 */
-			exchange_nup_ndown(i); /* 正反转禁止对应引脚取反 */
+			exchange_nup_ndown(i); /* 正反转禁止对应引脚取�? */
 	}
 #ifdef ENV_RESET
 	find_origin();
@@ -446,12 +446,11 @@ int main(void)
 #endif
 	user_io_init();
 	user_motion_init(); 
-    user_adc_start();
+  user_adc_start();
 	user_time_init();
 	user_uart_init();
 	  
 	init_flag = 1;
-	  
 	while (init_flag != 0)
 	{
 #ifdef ENV_IWDG
@@ -470,7 +469,7 @@ int main(void)
 			led_count = led_count%10;
 			if(led_count == 0)
 			{
-				LED_TOGGLE(); /* 闪烁指示灯 */
+				LED_TOGGLE(); /* 闪烁指示�? */
 			}
 			/*LED_END*/
 			/*SEAT_START*/
@@ -529,11 +528,11 @@ int main(void)
 			if(GET_ID_80())
 				status.id = status.id + 80;
 #ifdef ENV_SEAT_PICKING
-			if (frame.buff[7] == 0xAA) /* 选中所有座椅 */
+			if (frame.buff[7] == 0xAA) /* 选中�?有座�? */
 			{
 				seat_picking = 1;
 			}
-			else if (frame.buff[7] == 0x00) /* 取消选中所有座椅 */
+			else if (frame.buff[7] == 0x00) /* 取消选中�?有座�? */
 			{
 				seat_picking = 0;
 			}
@@ -543,7 +542,7 @@ int main(void)
 			}
 			else
 			{
-				; /* 维持当前选中或未选中状态 */
+				; /* 维持当前选中或未选中状�?? */
 			}
 #endif
 #ifdef ENV_SEND_SEAT_INFO
@@ -563,7 +562,7 @@ int main(void)
 #ifdef ENV_SEND_SEAT_INFO
 		if(send_seat)
 		{
-			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485发送 */
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485发�?? */
 			if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 			{
 				huart1.Instance->DR = send_buf[send_index];
@@ -680,7 +679,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.NbrOfConversion = 6;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -727,6 +726,15 @@ static void MX_ADC1_Init(void)
     */
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = 5;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = 6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -902,22 +910,27 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin 
+                          |OE_CE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, OUTPUT_SEATLED2_Pin|OUTPUT_SEATLED1_Pin|OUTPUT_CLR1_Pin|OUTPUT_DIR3_Pin 
                           |OUTPUT_DIR2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, OUTPUT_PUL1_Pin|OUTPUT_573LE2_Pin|OUTPUT_CLR2_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, OUTPUT_PUL1_Pin|OUTPUT_CLR2_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, OUTPUT_PUL2_Pin|OUTPUT_LED0_Pin|OUTPUT_LED1_Pin|OUTPUT_PUL3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin|OUTPUT_NUP3_Pin 
-                          |OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin 
-                          |OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOE, Uplimit1_Pin|Downlimit1_Pin|Uplimit2_Pin|Downlimit2_Pin 
+                          |Uplimit3_Pin|Downlimit3_Pin, GPIO_PIN_SET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOD, OUTPUT_573LE2_Pin|OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin 
+                          |OUTPUT_NUP3_Pin|OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin 
+                          |OUTPUT_NUP1_Pin|OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);
@@ -926,8 +939,12 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, OUTPUT_SP8_Pin|OUTPUT_SP7_Pin|OUTPUT_SP6_Pin|OUTPUT_SP5_Pin 
                           |OUTPUT_SP4_Pin|OUTPUT_SP3_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : OUTPUT_SEATLED5_Pin OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin;
+  /*Configure GPIO pins : OUTPUT_SEATLED5_Pin OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin 
+                           Uplimit1_Pin Downlimit1_Pin Uplimit2_Pin Downlimit2_Pin 
+                           Uplimit3_Pin Downlimit3_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin 
+                          |Uplimit1_Pin|Downlimit1_Pin|Uplimit2_Pin|Downlimit2_Pin 
+                          |Uplimit3_Pin|Downlimit3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
@@ -948,8 +965,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUTPUT_PUL1_Pin OUTPUT_485RW_Pin OUTPUT_573LE2_Pin OUTPUT_CLR2_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_PUL1_Pin|OUTPUT_485RW_Pin|OUTPUT_573LE2_Pin|OUTPUT_CLR2_Pin;
+  /*Configure GPIO pins : OUTPUT_PUL1_Pin OUTPUT_485RW_Pin OUTPUT_CLR2_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_PUL1_Pin|OUTPUT_485RW_Pin|OUTPUT_CLR2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -970,12 +987,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(INPUT_SW_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUTPUT_573LE3_Pin OUTPUT_DIR1_Pin OUTPUT_CLR3_Pin OUTPUT_NUP3_Pin 
-                           OUTPUT_NDOWN3_Pin OUTPUT_NUP2_Pin OUTPUT_NDOWN2_Pin OUTPUT_NUP1_Pin 
-                           OUTPUT_NDOWN1_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin|OUTPUT_NUP3_Pin 
-                          |OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin 
-                          |OUTPUT_NDOWN1_Pin;
+  /*Configure GPIO pins : OUTPUT_573LE2_Pin OUTPUT_573LE3_Pin OUTPUT_DIR1_Pin OUTPUT_CLR3_Pin 
+                           OUTPUT_NUP3_Pin OUTPUT_NDOWN3_Pin OUTPUT_NUP2_Pin OUTPUT_NDOWN2_Pin 
+                           OUTPUT_NUP1_Pin OUTPUT_NDOWN1_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_573LE2_Pin|OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin 
+                          |OUTPUT_NUP3_Pin|OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin 
+                          |OUTPUT_NUP1_Pin|OUTPUT_NDOWN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
@@ -991,6 +1008,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : OE_CE_Pin */
+  GPIO_InitStruct.Pin = OE_CE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(OE_CE_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);
