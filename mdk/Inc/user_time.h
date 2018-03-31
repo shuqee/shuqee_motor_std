@@ -13,4 +13,7 @@ extern void delay_ms(uint32_t times);
 extern void set_pul(enum motion_num index, GPIO_PinState dir, uint16_t speed, uint32_t conut);
 #endif
 
+extern void user_time_init(void);
+extern uint8_t get_tick_flag(void);
+extern void clr_tick_flag(void);
 #endif /* __USER_TIME_H */

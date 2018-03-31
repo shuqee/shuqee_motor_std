@@ -45,6 +45,8 @@
 #include "user_io.h"
 #include "user_time.h"
 #include "user_uart.h"
+#include "user_can.h"
+#include "sw_timer.h"
 
 #include <string.h>
 
@@ -53,6 +55,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
+
+CAN_HandleTypeDef hcan;
 
 IWDG_HandleTypeDef hiwdg;
 
@@ -81,6 +85,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG_Init(void);
+static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -406,6 +411,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_IWDG_Init();
+  MX_CAN_Init();
 
   /* USER CODE BEGIN 2 */
 #else
@@ -449,10 +455,14 @@ int main(void)
   user_adc_start();
 	user_time_init();
 	user_uart_init();
+	
+	sw_timer_init();
 	  
 	init_flag = 1;
 	while (init_flag != 0)
 	{
+		sw_timer_handle();
+		
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -736,6 +746,29 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_6;
   sConfig.Rank = 6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* CAN init function */
+static void MX_CAN_Init(void)
+{
+
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 12;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SJW = CAN_SJW_1TQ;
+  hcan.Init.BS1 = CAN_BS1_5TQ;
+  hcan.Init.BS2 = CAN_BS2_6TQ;
+  hcan.Init.TTCM = DISABLE;
+  hcan.Init.ABOM = DISABLE;
+  hcan.Init.AWUM = DISABLE;
+  hcan.Init.NART = DISABLE;
+  hcan.Init.RFLM = DISABLE;
+  hcan.Init.TXFP = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }

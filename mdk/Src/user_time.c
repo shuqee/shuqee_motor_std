@@ -100,3 +100,22 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	__HAL_TIM_SET_AUTORELOAD(htim, interval);
 	SAFE(motion[index].high.now += output_pul(index, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET));	//计算步数
 }
+
+
+static uint8_t tick_flag;
+void HAL_SYSTICK_Callback(void)
+{
+	SAFE(tick_flag=1);
+}	
+
+uint8_t get_tick_flag(void)
+{
+	uint8_t flag;
+	flag=tick_flag;
+	return flag;
+}
+
+void clr_tick_flag(void)
+{
+	SAFE(tick_flag=0);
+}

@@ -14,6 +14,13 @@
 #define Downlimit2(x) HAL_GPIO_WritePin(Downlimit2_GPIO_Port, Downlimit2_Pin, (GPIO_PinState)(!(x)))
 #define Downlimit3(x) HAL_GPIO_WritePin(Downlimit3_GPIO_Port, Downlimit3_Pin, (GPIO_PinState)(!(x)))
 
+#define LED_UP_LIMIT1_TOGGLE() HAL_GPIO_TogglePin(Uplimit1_GPIO_Port, Uplimit1_Pin)
+#define LED_UP_LIMIT2_TOGGLE() HAL_GPIO_TogglePin(Uplimit2_GPIO_Port, Uplimit2_Pin)
+#define LED_UP_LIMIT3_TOGGLE() HAL_GPIO_TogglePin(Uplimit3_GPIO_Port, Uplimit3_Pin)
+#define LED_DOWN_LIMIT1_TOGGLE() HAL_GPIO_TogglePin(Downlimit1_GPIO_Port, Downlimit1_Pin)
+#define LED_DOWN_LIMIT2_TOGGLE() HAL_GPIO_TogglePin(Downlimit2_GPIO_Port, Downlimit2_Pin)
+#define LED_DOWN_LIMIT3_TOGGLE() HAL_GPIO_TogglePin(Downlimit3_GPIO_Port, Downlimit3_Pin)
+
 #define LED(x) do{ \
 	HAL_GPIO_WritePin(OUTPUT_LED0_GPIO_Port, OUTPUT_LED0_Pin, (GPIO_PinState)(!(x))); \
 	HAL_GPIO_WritePin(OUTPUT_LED1_GPIO_Port, OUTPUT_LED1_Pin, (GPIO_PinState)(x)); \
