@@ -13,7 +13,7 @@ typedef enum
 	SPEED_MSG_ID = 0x101,		 //速度ID
 	SP_MSG_ID  = 0x102, //特效ID	
 	
-	NM_MSG_ID = 0x400,
+	NM_MSG_ID = 0x400
 } can_msg_id_t;
 
 typedef enum 
@@ -46,7 +46,7 @@ typedef struct
 } can_tx_item_t;
 
 void can_tx_handle(void);
-
+/**********************CAN的任务内容函数定义******************************/
 static void can_tx_nm(void)
 {
 	//send STATUS_MSG_ID into can bus
@@ -61,6 +61,7 @@ static void can_tx_status(void)
 	can_send(STATUS_MSG_ID, can_tx_buf[STATUS_MSG].data, 8);
 }
 
+/**********************CAN外部发送数据的调用函数******************************/
 void set_status_msg(uint8_t *tx_data)
 {
 	memcpy(can_tx_buf[STATUS_MSG].data, tx_data, 8);
@@ -71,6 +72,7 @@ void set_nm_msg(uint8_t *tx_data)
 	memcpy(can_tx_buf[NM_MSG].data, tx_data, 8);
 }
 
+/**********************CAN数组形式的任务内容的添加******************************/
 can_tx_item_t can_tx_table[CAN_TX_MAX_NUM];
 
 can_msg_id_t tx_msg_id_maping[CAN_TX_MAX_NUM] =
@@ -82,7 +84,7 @@ can_msg_id_t tx_msg_id_maping[CAN_TX_MAX_NUM] =
 uint8_t tx_msg_cycle_init[CAN_TX_MAX_NUM] =
 {
 	50, /* 0 NM_MSG:500ms */
-	5 /* 1 STATUS_MSG:50ms */
+	10 /* 1 STATUS_MSG:100ms */
 };
 
 p_fun_t can_tx_fun_init[CAN_TX_MAX_NUM] =
@@ -91,6 +93,7 @@ p_fun_t can_tx_fun_init[CAN_TX_MAX_NUM] =
 	&can_tx_status /* 1 STATUS_MSG */
 };
 
+/**********************CAN的任务内容初始化函数******************************/
 void can_tx_servet_init(void)
 {
 	can_tx_msg_t index = 0;
@@ -102,13 +105,14 @@ void can_tx_servet_init(void)
 		can_tx_table[index].can_tx = can_tx_fun_init[index];
 	}
 }
-
+/**********************CAN与TIME产生交集的函数******************************/
 void task_can_tx(void)
 {
 	LED_UP_LIMIT1_TOGGLE();
 	can_tx_handle();
 }
 
+/**********************CAN的任务进程函数******************************/
 void can_tx_handle(void)
 {
 	can_tx_msg_t index = 0;

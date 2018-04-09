@@ -424,6 +424,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+	MX_CAN_Init();
   /* MX_IWDG_Init(); */
 
 #endif
@@ -455,14 +456,14 @@ int main(void)
   user_adc_start();
 	user_time_init();
 	user_uart_init();
-	
+	user_can_init();
 	sw_timer_init();
 	  
 	init_flag = 1;
 	while (init_flag != 0)
 	{
 		sw_timer_handle();
-		
+		time_event();
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif

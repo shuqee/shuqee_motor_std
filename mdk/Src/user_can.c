@@ -119,29 +119,18 @@ void can_send(uint16_t msg_id, uint8_t *data, uint16_t len)
 	} 
 	else     
 	{ 
-
 		;/*to do*/
 	}	
 	CAN1->IER|=(1<<1);
 }
 
 /*时间事件*/
-static uint32_t time50ms;
 static uint8_t hb_tx_flag;
 static uint8_t update_flag;
 static uint8_t can_send_buff[8]={0,0x01,0x55};
 void time_event(void)
 {
 	uint8_t i;
-	if(get_tick_flag())
-	{
-		time50ms++;
-		clr_tick_flag();
-		if(time50ms>=500)    //50MS信号灯闪烁；
-		{
-			time50ms=0;
-		}				
-	}
 	if(hb_tx_flag)
 	{
 		/*返回"心跳"数据帧给串口板*/
