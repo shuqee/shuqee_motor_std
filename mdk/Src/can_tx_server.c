@@ -2,26 +2,9 @@
 #include "user_io.h"
 #include "user_can.h"
 #include "string.h"
+#include "user_config.h"
 
 typedef void(*p_fun_t)(void);
-
-typedef enum 
-{
-	STATUS_MSG_ID = 0x0,
-	
-	HIGHT_MSG_ID = 0x100,    //高度ID
-	SPEED_MSG_ID = 0x101,		 //速度ID
-	SP_MSG_ID  = 0x102, //特效ID	
-	
-	NM_MSG_ID = 0x400
-} can_msg_id_t;
-
-typedef enum 
-{
-	HIGHT_MSG=0,  //高度ID
-	SPEED_MSG,					//速度ID
-	SP_MSG,					  //特效ID	
-} can_rx_msg_t;
 
 typedef struct 
 {
@@ -46,6 +29,7 @@ typedef struct
 } can_tx_item_t;
 
 void can_tx_handle(void);
+void can_rx_handle(void);
 /**********************CAN的任务内容函数定义******************************/
 static void can_tx_nm(void)
 {
@@ -59,17 +43,6 @@ static void can_tx_status(void)
 	//send NM_MSG_ID into can bus
 	LED_UP_LIMIT3_TOGGLE();
 	can_send(STATUS_MSG_ID, can_tx_buf[STATUS_MSG].data, 8);
-}
-
-/**********************CAN外部发送数据的调用函数******************************/
-void set_status_msg(uint8_t *tx_data)
-{
-	memcpy(can_tx_buf[STATUS_MSG].data, tx_data, 8);
-}
-
-void set_nm_msg(uint8_t *tx_data)
-{
-	memcpy(can_tx_buf[NM_MSG].data, tx_data, 8);
 }
 
 /**********************CAN数组形式的任务内容的添加******************************/
@@ -96,8 +69,8 @@ p_fun_t can_tx_fun_init[CAN_TX_MAX_NUM] =
 /**********************CAN的任务内容初始化函数******************************/
 void can_tx_servet_init(void)
 {
-	can_tx_msg_t index = 0;
-	for (index = 0; index < CAN_TX_MAX_NUM; index++)
+	can_tx_msg_t index ;
+	for (index = NM_MSG; index < CAN_TX_MAX_NUM; index++)
 	{
 		can_tx_table[index].msg_id = tx_msg_id_maping[index];
 		can_tx_table[index].cycle = tx_msg_cycle_init[index];
@@ -108,15 +81,17 @@ void can_tx_servet_init(void)
 /**********************CAN与TIME产生交集的函数******************************/
 void task_can_tx(void)
 {
+	CAN1->IER|=(1<<1); //确保CAN可以在线热插拔；
 	LED_UP_LIMIT1_TOGGLE();
 	can_tx_handle();
+	can_rx_handle();
 }
 
 /**********************CAN的任务进程函数******************************/
 void can_tx_handle(void)
 {
-	can_tx_msg_t index = 0;
-	for (index = 0; index < CAN_TX_MAX_NUM; index++)
+	can_tx_msg_t index ;
+	for (index = NM_MSG; index < CAN_TX_MAX_NUM; index++)
 	{
 		if (can_tx_table[index].count == 0)
 		{
@@ -130,5 +105,228 @@ void can_tx_handle(void)
 	}
 }
 
+/**********************CAN外部发送数据的调用函数******************************/
+void set_status_msg(uint8_t *tx_data)
+{
+	memcpy(can_tx_buf[STATUS_MSG].data, tx_data, 8);
+}
 
+void set_nm_msg(uint8_t *tx_data)
+{
+	memcpy(can_tx_buf[NM_MSG].data, tx_data, 8);
+}
+
+
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************************************************************************/
+/********************************CAN接收模块的编写********************************************/
+/****↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*******/
+
+typedef enum 
+{
+	HIGHT_MSG=0,  //高度ID
+	SPEED_MSG,					//速度ID
+	SP_MSG,					  //特效ID	
+	HEART_MSG,
+	CAN_RX_MAX_NUM
+} can_rx_msg_t;
+
+typedef struct
+{
+	uint16_t msg_id;        //接收的ID号
+	uint8_t flag;           //置位标志；
+	p_fun_t can_rx;        //正常执行程序；
+	uint16_t count;        //时间计数；
+	uint16_t timeout;     //超时时间；
+	p_fun_t timeout_process;     //超时进程处理；
+}can_rx_item_t;
+
+can_rx_item_t can_rx_table[CAN_RX_MAX_NUM]={0};
+
+typedef struct
+{
+	uint8_t data[8];
+}can_rx_data;
+
+/*init*/
+can_rx_data can_rx_buff[CAN_RX_MAX_NUM]={0};
+
+uint16_t msg_id_mapping[CAN_RX_MAX_NUM]=
+{
+	HIGHT_MSG_ID, 
+	SPEED_MSG_ID,
+	SP_MSG_ID,
+	HEART_BEAT_ID
+};
+
+uint8_t can_rx_flag_init[CAN_RX_MAX_NUM]={0};
+
+static void can_rx_hight(void)
+{
+    //something to do;
+}
+
+static void can_rx_speed(void)
+{
+    //something to do;	
+}	
+
+static void can_rx_sp(void)
+{
+	LED_DOWN_LIMIT2_TOGGLE();
+}	
+
+static void can_rx_hb(void)
+{
+	LED_DOWN_LIMIT3_TOGGLE();
+}	
+p_fun_t can_rx_fun_init[CAN_RX_MAX_NUM]=
+{
+	&can_rx_hight,
+	&can_rx_speed,
+	&can_rx_sp,
+	&can_rx_hb
+};
+
+uint16_t can_rx_count_init[CAN_RX_MAX_NUM]={0};
+
+uint16_t can_rx_timeout_init[CAN_RX_MAX_NUM]=
+{
+	25,
+	25,
+	25,
+	1000
+};
+
+static void can_rx_hight_ot(void)
+{
+			//something to do;	
+}	
+static void can_rx_speed_ot(void)
+{
+	    //something to do;
+}	
+static void can_rx_sp_ot(void)
+{
+	    //something to do;
+}	
+static void can_rx_hb_ot(void)
+{
+    //something to do;	
+}	
+p_fun_t can_rx_ot_process[CAN_RX_MAX_NUM]=
+{
+	&can_rx_hight_ot,
+	&can_rx_speed_ot,
+	&can_rx_sp_ot,
+	&can_rx_hb_ot	
+};
+
+void can_rx_init(void)
+{
+	can_rx_msg_t index;
+	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
+	{
+		can_rx_table[index].msg_id=msg_id_mapping[index];
+		can_rx_table[index].flag=0;
+		can_rx_table[index].count=0;
+		can_rx_table[index].can_rx=can_rx_fun_init[index];
+		can_rx_table[index].timeout=can_rx_timeout_init[index];
+		can_rx_table[index].timeout_process=can_rx_ot_process[index];
+	}
+}	
+static uint8_t update_flag;
+uint8_t can_hb_buff[8]={0,0x01,0x55};
+void can_rx_handle(void)
+{
+	can_rx_msg_t index;
+	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
+	{
+		if(can_rx_table[index].flag==1)
+		{
+			/*返回心跳信号*/
+			/*can_hb_buff[0]代表座椅地址  can_hb_buff[1]代表心跳信号  can_hb_buff[2]代表验证码*/	
+			if(can_rx_table[HEART_MSG].flag==1)
+			{
+				can_send(HEART_BEAT_ID+status.id,can_hb_buff, 8);
+			}	
+			if(index==3) 
+			{
+				update_flag=1;
+			}	
+			can_rx_table[index].can_rx();
+			can_rx_table[index].flag=0;
+			can_rx_table[index].count=0;
+			memcpy(can_rx_buff[index].data,hcan.pRxMsg->Data,8);
+		}	
+		if(can_rx_table[index].flag!=1)
+		{
+			can_rx_table[index].count++;
+		}	
+		if(can_rx_table[index].count>=can_rx_table[index].timeout)
+		{
+			can_rx_table[index].timeout_process();
+		}		
+	}
+}
+
+/*获取CAN数据的更新位*/
+uint8_t get_update_flag(void)
+{
+	uint8_t update_byte;
+	SAFE(update_byte=update_flag);
+	return update_byte;
+}	
+/****************提供给外部的FLAG标志位更改*************************/
+void set_can_rx_flag(uint16_t msg_id)
+{
+	can_rx_msg_t index;
+	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
+	{
+		if(msg_id==msg_id_mapping[index])
+		{
+			SAFE(can_rx_table[index].flag=1);     //使能对应的FLAG标志位；
+		}	
+	}
+}
+///////////////////////////////*提供CAN的外部接口*////////////////////////////////////////////////
+/*提取的形参   ID段号  ， 缸号*/
+
+//	HIGHT_MSG_P   ,         //高度ID
+//	SPEED_MSG_P ,          //速度ID
+//	ENV_SP_P ,            //特效ID	
+//	SEAT_ID_P ,          //座椅ID
+//	SEAT_SP_P           //环境特效ID
+	
+void get_high_speed_date(uint16_t msg_addr,uint8_t *pData) 
+{
+	uint8_t i;
+	switch(msg_addr)
+	{
+		case HIGHT_MSG_P:
+					for(i=0;i<8;i++)
+					{
+						pData[i]=can_rx_buff[HIGHT_MSG_ID].data[i];
+					}
+					break;
+		case SPEED_MSG_P:
+			    for(i=0;i<8;i++)
+					{
+						pData[i]=can_rx_buff[SPEED_MSG_ID].data[i];
+					}
+					break;
+		case SEAT_SP_P:			
+				 pData=&(can_rx_buff[SP_MSG_ID].data[1]);  //返回座椅特效
+				 break;
+		case SEAT_ID_P:
+				 pData =&(can_rx_buff[SP_MSG_ID].data[2]);  //返回座椅ID号；	
+				 break;
+		case ENV_SP_P:
+				 pData=&(can_rx_buff[SP_MSG_ID].data[0]);  //返回环境特效；
+		     break;
+		default:
+			   break;
+	}	
+}
 

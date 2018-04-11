@@ -36,7 +36,9 @@ void sw_timer_init(void)
 	}
 	
 	can_tx_servet_init();
+	can_rx_init(); 
 }
+
 /**********************时间事件的进程函数******************************/
 void sw_timer_handle(void)
 {

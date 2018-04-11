@@ -92,30 +92,13 @@
 #endif
 
 #define SPB_AIR_INJECTION_MASK (0x1<<6)
-#define SEAT_AMOUNT 10 //设置座椅的个数；
-#define HEART_BEAT 0x200  //心跳的ID号段号；
-#define NONE_DATA 0x11
+
 
 #define SAFE(x) do{ \
 	__set_PRIMASK(1); \
 	x; \
 	__set_PRIMASK(0); \
 }while(0)	//原子操作
-
-enum msg
-{
-	HIGHT_MSG_ID=0x100,  //高度ID
-	SPEED_MSG_ID,					//速度ID
-	SP_MSG_ID,					  //特效ID	
-	MSG_ID_COUNT,
-	CHAIR_DATA,
-	ENV_DATA
-};	
-
-struct rx_buff
-{
-	uint8_t date[8];
-};	
 
 struct high
 {
@@ -167,19 +150,12 @@ struct status
 	uint8_t spb;				//座椅特效
 	uint8_t uplimit[MOTION_COUNT];
 	uint8_t downlimit[MOTION_COUNT];
-	uint8_t hight_id;
-	uint8_t speed_id;
-	uint8_t sp_id;
-	uint8_t rx_cnt;
 };
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
 extern CAN_HandleTypeDef hcan;
-
-extern struct rx_buff msg_buff[MSG_ID_COUNT];
-extern uint16_t stdid_buff[SEAT_AMOUNT];
 extern struct motion_status motion[MOTION_COUNT];
 extern struct status status;
 

@@ -4,7 +4,6 @@
 
 CanTxMsgTypeDef txmessage;
 CanRxMsgTypeDef rxmessage;
-struct rx_buff msg_buff[MSG_ID_COUNT];
 
 static void can_txconfig()
 {
@@ -80,7 +79,7 @@ static void can_scale32_idmask(uint8_t filter_num)
 
 void user_can_init(void)
 { can_txconfig();
-	can_rxconfig(0,HEART_BEAT);
+	can_rxconfig(0,HEART_BEAT_ID);
 	can_scale32_idmask(1);  
  	HAL_CAN_Receive_IT(&hcan,CAN_FIFO0);
 }
@@ -124,110 +123,12 @@ void can_send(uint16_t msg_id, uint8_t *data, uint16_t len)
 	CAN1->IER|=(1<<1);
 }
 
-/*时间事件*/
-static uint8_t hb_tx_flag;
-static uint8_t update_flag;
-static uint8_t can_send_buff[8]={0,0x01,0x55};
-void time_event(void)
-{
-	uint8_t i;
-	if(hb_tx_flag)
-	{
-		/*返回"心跳"数据帧给串口板*/
-		hb_tx_flag=0;
-		can_send((HEART_BEAT+status.id),can_send_buff,8); 
-	}	
-	if(status.hight_id)
-	{
-		status.hight_id=0;
-		for(i=0;i<8;i++)
-		{
-			msg_buff[HIGHT_MSG_ID].date[i]=hcan.pRxMsg->Data[i];
-		}
-	}
-	if(status.speed_id)
-	{
-		status.speed_id=0;
-		for(i=0;i<8;i++)
-		{
-			msg_buff[SPEED_MSG_ID].date[i]=hcan.pRxMsg->Data[i];
-		}		
-	}
-	if(status.sp_id)
-	{
-		status.sp_id=0;
-		for(i=0;i<8;i++)
-		{
-			msg_buff[SP_MSG_ID].date[i]=hcan.pRxMsg->Data[i];
-		}				
-	}	
-	if(status.rx_cnt==3)
-	{
-		update_flag = 1;
-    status.rx_cnt=0;		
-	}	
-	CAN1->IER|=(1<<1); //确保CAN可以在线热插拔；
-}
-
-uint16_t stdid_buff[SEAT_AMOUNT];
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {   
 	/*分析接收到的是什么数据*/
-	/*can_send_buff[0]代表座椅地址  can_send_buff[1]代表心跳信号  can_send_buff[2]代表验证码*/
-	if(hcan->pRxMsg->StdId==HEART_BEAT)  /*接收到了对应的"心跳"数据*/
-	{
-		hb_tx_flag=1;
-	}	
-	if(hcan->pRxMsg->StdId==HIGHT_MSG_ID)		/*收到了动作高度数据0x100段*/
-	{
-		status.hight_id=1;	
-	}	
-	if(hcan->pRxMsg->StdId==SPEED_MSG_ID)		/*收到了动作速度数据0x101段*/
-	{
-		status.speed_id=1;
-	}		
-	if(hcan->pRxMsg->StdId==SP_MSG_ID)		/*收到了环境特效，座椅特效，ID数据0x102段*/
-	{
-		status.sp_id=1;
-	}		
+	set_can_rx_flag(hcan->pRxMsg->StdId);
 	CAN1->IER|=(1<<1);
 	HAL_CAN_Receive_IT(hcan,CAN_FIFO0);
 }
 
-///////////////////////////////*提供CAN的外部接口*////////////////////////////////////////////////
-/*提取的形参   ID段号  ， 缸号*/
-
-//	HIGHT_MSG_ID=0x100,  //高度ID
-//	SPEED_MSG_ID,					//速度ID
-//	SP_MSG_ID,					  //特效ID	    
-//	CHAIR_DATA,           //座椅ID
-//	ENV_DATA							//环境特效ID
-	
-uint8_t get_high_speed_date(uint16_t msg_addr,uint8_t motion)
-{
-	switch(msg_addr)
-	{
-		case HIGHT_MSG_ID:
-				 return msg_buff[HIGHT_MSG_ID].date[motion-1];
-		case SPEED_MSG_ID:
-				 return msg_buff[SPEED_MSG_ID].date[motion-1];
-		case SP_MSG_ID:
-				 return msg_buff[SP_MSG_ID].date[1];  //返回座椅特效
-		case CHAIR_DATA:
-				 return msg_buff[SP_MSG_ID].date[2];  //返回座椅ID号；		
-		case ENV_DATA:
-				 return msg_buff[SP_MSG_ID].date[0];  //返回环境特效；
-		default:
-			   break;
-	}	
-	return NONE_DATA;
-}
-
-/*获取CAN数据的更新位*/
-uint8_t get_update_flag(void)
-{
-	uint8_t update_byte;
-	SAFE(update_byte=update_flag);
-	return update_byte;
-}	
 

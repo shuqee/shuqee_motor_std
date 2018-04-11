@@ -10,6 +10,7 @@ extern void task_can_tx(void);
 	
 extern void sw_timer_init(void);
 extern void sw_timer_handle(void);
+extern void can_rx_init(void);
 
 #endif /* __USER_TIME_H */
 

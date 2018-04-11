@@ -463,7 +463,6 @@ int main(void)
 	while (init_flag != 0)
 	{
 		sw_timer_handle();
-		time_event();
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -472,6 +471,7 @@ int main(void)
 		SAFE(update = frame.enable);
 		SAFE(free_ndown());
 		SAFE(free_nup());
+		update=get_update_flag();    /////////////////////////DEBUG��
 		if(update) /* 串口数据更新 */
 		{
 			SAFE(frame.enable = 0);
