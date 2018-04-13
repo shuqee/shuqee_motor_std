@@ -78,6 +78,7 @@ void can_tx_servet_init(void)
 		can_tx_table[index].can_tx = can_tx_fun_init[index];
 	}
 }
+
 /**********************CAN与TIME产生交集的函数******************************/
 void task_can_tx(void)
 {
@@ -238,6 +239,8 @@ void can_rx_init(void)
 }	
 static uint8_t update_flag;
 uint8_t can_hb_buff[8]={0,0x01,0x55};
+
+
 void can_rx_handle(void)
 {
 	can_rx_msg_t index;
@@ -298,35 +301,34 @@ void set_can_rx_flag(uint16_t msg_id)
 //	ENV_SP_P ,            //特效ID	
 //	SEAT_ID_P ,          //座椅ID
 //	SEAT_SP_P           //环境特效ID
-	
-void get_high_speed_date(uint16_t msg_addr,uint8_t *pData) 
+
+//uint8_t msg_buff_l[8]={0};
+//uint8_t a,b,c;
+//	get_high_speed_date(HIGHT_MSG_P,msg_buff_l);          //示例；
+//	get_high_speed_date(ENV_SP_P,&a);
+//	get_high_speed_date(SEAT_ID_P,&b);
+//	get_high_speed_date(SEAT_SP_P,&c);
+
+void get_high_speed_date(uint16_t msg_addr,uint8_t * pData)   
 {
-	uint8_t i;
 	switch(msg_addr)
 	{
 		case HIGHT_MSG_P:
-					for(i=0;i<8;i++)
-					{
-						pData[i]=can_rx_buff[HIGHT_MSG_ID].data[i];
-					}
-					break;
+			   memcpy(pData,can_rx_buff[HIGHT_MSG].data,8);
+				 break;
 		case SPEED_MSG_P:
-			    for(i=0;i<8;i++)
-					{
-						pData[i]=can_rx_buff[SPEED_MSG_ID].data[i];
-					}
-					break;
-		case SEAT_SP_P:			
-				 pData=&(can_rx_buff[SP_MSG_ID].data[1]);  //返回座椅特效
+			   memcpy(pData,can_rx_buff[SPEED_MSG].data,8);
+				 break;
+		case SEAT_SP_P:	
+				 memcpy(pData,(can_rx_buff[SP_MSG].data+1),1); //返回座椅特效  1
 				 break;
 		case SEAT_ID_P:
-				 pData =&(can_rx_buff[SP_MSG_ID].data[2]);  //返回座椅ID号；	
+				 memcpy(pData,(can_rx_buff[SP_MSG].data+2),1);  //返回座椅ID号；	2
 				 break;
 		case ENV_SP_P:
-				 pData=&(can_rx_buff[SP_MSG_ID].data[0]);  //返回环境特效；
+				 memcpy(pData,(can_rx_buff[SP_MSG].data),1);  //返回环境特效； 0
 		     break;
 		default:
 			   break;
 	}	
 }
-
