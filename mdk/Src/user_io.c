@@ -4,6 +4,24 @@
 
 #include <string.h>
 
+
+
+#ifdef ENV_24V_SENOR
+#define ADC_TH 0x03e8
+#define ADC_BUFF_SIZE 6
+#define SEAT_COUNT 6
+enum adc_item
+{
+	ADC_ITEM_SEAT1 = 0,
+	ADC_ITEM_SEAT2,
+	ADC_ITEM_SEAT3,
+	ADC_ITEM_SEAT4,
+	ADC_ITEM_SEAT5,
+	/*加入的24V检测口*/
+	ADC_ITEM_SEAT6,
+	ADC_ITEM_COUNT
+};
+#else
 #define ADC_TH 0x03e8
 #define ADC_BUFF_SIZE 5
 #define SEAT_COUNT 5
@@ -17,7 +35,7 @@ enum adc_item
 	ADC_ITEM_SEAT5,
 	ADC_ITEM_COUNT
 };
-
+	#endif
 extern int flag_rst;
 
 static __IO uint16_t adc_buf[ADC_BUFF_SIZE][ADC_ITEM_COUNT] = {0};
@@ -34,7 +52,8 @@ void user_io_init(void)
 	HAL_GPIO_WritePin(OUTPUT_SP6_GPIO_Port, OUTPUT_SP6_Pin, GPIO_PIN_SET); /* 关闭特效 */
 	HAL_GPIO_WritePin(OUTPUT_SP7_GPIO_Port, OUTPUT_SP7_Pin, GPIO_PIN_SET); /* 关闭特效 */
 	HAL_GPIO_WritePin(OUTPUT_SP8_GPIO_Port, OUTPUT_SP8_Pin, GPIO_PIN_SET); /* 关闭特效 */
-	
+		/*开启573  OE1，OE2,OE3*/
+	HAL_GPIO_WritePin(OE_CE_GPIO_Port, OE_CE_Pin, GPIO_PIN_RESET); /* 开启573的使能端 */
 	HAL_GPIO_WritePin(OUTPUT_573LE1_GPIO_Port, OUTPUT_573LE1_Pin, GPIO_PIN_SET);//使能锁存器
 	HAL_GPIO_WritePin(OUTPUT_573LE2_GPIO_Port, OUTPUT_573LE2_Pin, GPIO_PIN_SET);//使能锁存器
 	HAL_GPIO_WritePin(OUTPUT_573LE3_GPIO_Port, OUTPUT_573LE3_Pin, GPIO_PIN_SET);//使能锁存器
@@ -47,6 +66,7 @@ void user_io_init(void)
 	HAL_GPIO_WritePin(OUTPUT_NDOWN2_GPIO_Port, OUTPUT_NDOWN2_Pin, GPIO_PIN_SET);//允许下降
 	HAL_GPIO_WritePin(OUTPUT_NUP3_GPIO_Port, OUTPUT_NUP3_Pin, GPIO_PIN_SET);//允许上升
 	HAL_GPIO_WritePin(OUTPUT_NDOWN3_GPIO_Port, OUTPUT_NDOWN3_Pin, GPIO_PIN_SET);//允许下降
+
 	
 	HAL_GPIO_WritePin(OUTPUT_CLR1_GPIO_Port, OUTPUT_CLR1_Pin, GPIO_PIN_SET);//消除警报
 	HAL_GPIO_WritePin(OUTPUT_CLR2_GPIO_Port, OUTPUT_CLR2_Pin, GPIO_PIN_SET);//消除警报
@@ -129,7 +149,13 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc)
 		LED_SEAT5(1);
 	else
 		LED_SEAT5(0);
-	
+	/*加入的24V检测*/
+	#ifdef ENV_24V_SENOR
+		if(delay_count[5])
+		LED_SEAT5(1);
+	else
+		LED_SEAT5(0);
+	#endif
 	status.seat_num = seat_num_tmp;
 }
 
@@ -180,12 +206,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.uplimit[MOTION1] = 1;	//消除抖动的操作
 					up_limit(MOTION1);
+					Uplimit1(1);
 				}
 			}
 			else
 			{
 				if(status.uplimit[MOTION1])
 					status.uplimit[MOTION1] = 0;
+				 Uplimit1(0);
 			}
 			break;
 		case EXTI_DOWNLIMIT1_Pin:
@@ -195,12 +223,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.downlimit[MOTION1] = 1;
 					down_limit(MOTION1);
+					Downlimit1(1);
 				}
 			}
 			else
 			{
 				if(status.downlimit[MOTION1])
 					status.downlimit[MOTION1] = 0;
+				Downlimit1(0);
 			}
 			break;
 		case EXTI_UPLIMIT2_Pin:
@@ -210,6 +240,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.uplimit[MOTION2] = 1;
 					up_limit(MOTION2);
+					Uplimit2(1);
 				}
 			}
 			else
@@ -217,6 +248,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(status.uplimit[MOTION2])
 				{
 					status.uplimit[MOTION2] = 0;
+					Uplimit2(0);
 				}
 			}
 			break;
@@ -227,12 +259,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.downlimit[MOTION2] = 1;
 					down_limit(MOTION2);
+					Downlimit2(1);
 				}
 			}
 			else
 			{
 				if(status.downlimit[MOTION2])
 					status.downlimit[MOTION2] = 0;
+				 Downlimit2(0);
 			}
 			break;	
 		case EXTI_UPLIMIT3_Pin:
@@ -242,6 +276,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.uplimit[MOTION3] = 1;
 					up_limit(MOTION3);
+					Uplimit3(1);
 				}
 			}
 			else
@@ -249,6 +284,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(status.uplimit[MOTION3])
 				{
 					status.uplimit[MOTION3] = 0;
+					Uplimit3(0);
 				}
 			}
 			break;
@@ -259,12 +295,14 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				{
 					status.downlimit[MOTION3] = 1;
 					down_limit(MOTION3);
+					Downlimit3(1);
 				}
 			}
 			else
 			{
 				if(status.downlimit[MOTION3])
 					status.downlimit[MOTION3] = 0;
+				Downlimit3(0);
 			}
 			break;	
 		default:

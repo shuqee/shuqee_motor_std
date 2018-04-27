@@ -71,3 +71,30 @@ int fputc(int ch, FILE *f)
 	while(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) == RESET);
 	return ch; 
 }
+
+/*******增加错误处理复位机制***********/
+void HAL_UART_ErrorCallback(UART_HandleTypeDef *huart)
+{
+	if(huart->Instance==USART1)
+	{
+		switch(huart->ErrorCode)
+		{
+			case HAL_UART_ERROR_PE: 
+						__HAL_UART_CLEAR_PEFLAG(&huart1); 
+						break;
+			
+			case HAL_UART_ERROR_NE: 
+						__HAL_UART_CLEAR_NEFLAG(&huart1);
+						break;
+			
+			case HAL_UART_ERROR_FE: 
+					 __HAL_UART_CLEAR_FEFLAG(&huart1);
+					 break;
+			
+			case HAL_UART_ERROR_ORE: 
+					 __HAL_UART_CLEAR_OREFLAG(&huart1);
+					 break;
+		}
+	}	
+	HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1);
+}	

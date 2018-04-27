@@ -5,7 +5,7 @@
 
 //#define DEBUG_ENV	//调试模式
 
-#define ENV_IWDG
+//#define ENV_IWDG
 
 #define ENV_RESET_SPEED 800 //ENV_RESET_SPEED越大复位速度越慢
 
@@ -19,7 +19,7 @@
 
 #ifdef ENV_3DOF_NO_SENSOR
 	#define ENV_NOSENSOR	//没有传感器
-	#define ENV_RESET	//复位
+//	#define ENV_RESET	//复位
 	#define MOTION1_ENABLE
 	#define MOTION2_ENABLE
 	#define MOTION3_ENABLE
@@ -158,7 +158,7 @@ struct status
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
-
+extern CAN_HandleTypeDef hcan;
 extern struct motion_status motion[MOTION_COUNT];
 extern struct status status;
 

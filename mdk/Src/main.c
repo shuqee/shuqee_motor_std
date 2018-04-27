@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -45,6 +45,8 @@
 #include "user_io.h"
 #include "user_time.h"
 #include "user_uart.h"
+#include "user_can.h"
+#include "sw_timer.h"
 
 #include <string.h>
 
@@ -53,6 +55,8 @@
 /* Private variables ---------------------------------------------------------*/
 ADC_HandleTypeDef hadc1;
 DMA_HandleTypeDef hdma_adc1;
+
+CAN_HandleTypeDef hcan;
 
 IWDG_HandleTypeDef hiwdg;
 
@@ -81,6 +85,7 @@ static void MX_TIM2_Init(void);
 static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG_Init(void);
+static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
@@ -120,9 +125,9 @@ void find_origin(void) /* reset function */
 	uint8_t downlimit_temp = 0;
 	int def_high[MOTION_COUNT] = {0};
 	int find_origin_step[MOTION_COUNT] = {0};
-	uint8_t not_reset_num = 0; /* Êú™Â§ç‰ΩçÁº∏ÁöÑÊï∞Èáè */
+	uint8_t not_reset_num = 0; /* Œ¥∏¥Œª∏◊µƒ ˝¡ø */
 	for(i=MOTION1; i<MOTION_COUNT; i++)
-	flag_rst |= 1<<i; /* ÂàùÂßãÂåñÂ§ç‰ΩçÊ†áÂøó(Áº∏ÂØπÂ∫î‰ΩçÂàùÂßãÂÄº‰∏∫1,Â§ç‰ΩçÂêéÁº∏ÂØπÂ∫î‰Ωç‰∏∫0) */
+	flag_rst |= 1<<i; /* ≥ı ºªØ∏¥Œª±Í÷æ(∏◊∂‘”¶Œª≥ı º÷µŒ™1,∏¥Œª∫Û∏◊∂‘”¶ŒªŒ™0) */
 #ifndef MOTION1_ENABLE
 	flag_rst &= ~(1<<MOTION1);
 #endif
@@ -132,19 +137,19 @@ void find_origin(void) /* reset function */
 #ifndef MOTION3_ENABLE
 	flag_rst &= ~(1<<MOTION3);
 #endif
-	while(flag_rst)	/* ‰ªçÊúâÁº∏Êú™Â§ç‰Ωç */
+	while(flag_rst)	/* »‘”–∏◊Œ¥∏¥Œª */
 	{
 		not_reset_num = 0;
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0) /* Êú™Â§ç‰Ωç */
+			if((flag_rst&(1<<i)) != 0) /* Œ¥∏¥Œª */
 			{
 				not_reset_num += 1;
 			}
 		}
 		for(i=MOTION1; i<MOTION_COUNT; i++)
 		{
-			if((flag_rst&(1<<i)) != 0) /* Êú™Â§ç‰Ωç */
+			if((flag_rst&(1<<i)) != 0) /* Œ¥∏¥Œª */
 			{
 				SAFE(downlimit_temp = status.downlimit[i]);
 				switch (find_origin_step[i])
@@ -160,10 +165,10 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(1);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 0) /* Áº∏Êú™Âà∞Â∫ï */
+						if (downlimit_temp == 0) /* ∏◊Œ¥µΩµ◊ */
 						{
-							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏ãÈôç */
-							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* Âêë‰∏ãËøêÂä® */
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ‘ –Ìœ¬Ωµ */
+							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* œÚœ¬‘À∂Ø */
 						}
 						else
 						{
@@ -181,10 +186,10 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(1);
 						}
-						if (downlimit_temp == 1) /* Áº∏Âà∞Â∫ï */
+						if (downlimit_temp == 1) /* ∏◊µΩµ◊ */
 						{
-							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏äÂçá */
-							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* Âêë‰∏äËøêÂä® */
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ‘ –Ì…œ…˝ */
+							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* œÚ…œ‘À∂Ø */
 						}
 						else
 						{
@@ -202,14 +207,14 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(1);
 							LED_SEAT4(0);
 						}
-						if (downlimit_temp == 0) /* Áº∏Êú™Âà∞Â∫ï */
+						if (downlimit_temp == 0) /* ∏◊Œ¥µΩµ◊ */
 						{
-							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏ãÈôç */
-							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* Âêë‰∏ãËøêÂä® */
+							HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ‘ –Ìœ¬Ωµ */
+							set_pul(i, (GPIO_PinState)1, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* œÚœ¬‘À∂Ø */
 						}
 						else
 						{
-							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏äÂçá */
+							HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ‘ –Ì…œ…˝ */
 							++find_origin_step[i];
 						}
 						break;
@@ -224,11 +229,11 @@ void find_origin(void) /* reset function */
 							LED_SEAT3(0);
 							LED_SEAT4(0);
 						}
-						if (motion[i].config.adj == 0) /* ‰∏çÈúÄË¶ÅÊ†°Ê≠£ */
-							flag_rst &= ~(1<<i); /* Ê†áÂøóÂ§ç‰ΩçÂÆåÊàê */
+						if (motion[i].config.adj == 0) /* ≤ª–Ë“™–£’˝ */
+							flag_rst &= ~(1<<i); /* ±Í÷æ∏¥ŒªÕÍ≥… */
 						else
 						{
-							def_high[i] = motion[i].config.adj * ENV_SPACE;	/* ÂàùÂßãÂåñÊ†°Ê≠£È´òÂ∫¶ */
+							def_high[i] = motion[i].config.adj * ENV_SPACE;	/* ≥ı ºªØ–£’˝∏ﬂ∂» */
 							++find_origin_step[i];
 						}
 						break;
@@ -245,11 +250,11 @@ void find_origin(void) /* reset function */
 						}
 						if(def_high[i] != 0)
 						{
-							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* Âêë‰∏äËøêÂä® */
+							set_pul(i, (GPIO_PinState)0, (ENV_RESET_SPEED*MOTION_COUNT/not_reset_num), 1); /* œÚ…œ‘À∂Ø */
 							def_high[i]--;
-							if(def_high[i] == 0) /* ËøêÂä®Âà∞ÊåáÂÆö‰ΩçÁΩÆ */
+							if(def_high[i] == 0) /* ‘À∂ØµΩ÷∏∂®Œª÷√ */
 							{
-								flag_rst &= ~(1<<i); /* Ê†áÂøóÂ§ç‰ΩçÂÆåÊàê */
+								flag_rst &= ~(1<<i); /* ±Í÷æ∏¥ŒªÕÍ≥… */
 							}
 						}
 						break;
@@ -323,8 +328,8 @@ void user_motion_init(void)
 	{
 		motion[i].index = i;
 		motion[i].high.set = motion[i].config.origin * ENV_SPACE;
-		if (motion[i].config.dir == GPIO_PIN_SET) /* Â¶ÇÊûúËÑâÂÜ≤ÊñπÂêëÂèñÂèç */
-			exchange_nup_ndown(i); /* Ê≠£ÂèçËΩ¨Á¶ÅÊ≠¢ÂØπÂ∫îÂºïËÑöÂèñÂèç */
+		if (motion[i].config.dir == GPIO_PIN_SET) /* »Áπ˚¬ˆ≥Â∑ΩœÚ»°∑¥ */
+			exchange_nup_ndown(i); /* ’˝∑¥◊™Ω˚÷π∂‘”¶“˝Ω≈»°∑¥ */
 	}
 #ifdef ENV_RESET
 	find_origin();
@@ -338,7 +343,7 @@ void free_ndown(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (motion[i].high.now >= 0 * ENV_SPACE)
-			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏ãÈôç */
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ‘ –Ìœ¬Ωµ */
 	}
 }
 void free_nup(void)
@@ -347,7 +352,7 @@ void free_nup(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (motion[i].high.now <= 255 * ENV_SPACE)
-			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏äÂçá */
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ‘ –Ì…œ…˝ */
 	}
 }
 #else
@@ -357,7 +362,7 @@ void free_ndown(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (status.downlimit[i] == 0)
-			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏ãÈôç */
+			HAL_GPIO_WritePin(motion[i].io.ndown_port, motion[i].io.ndown_pin, GPIO_PIN_SET); /* ‘ –Ìœ¬Ωµ */
 	}
 }
 void free_nup(void)
@@ -366,7 +371,7 @@ void free_nup(void)
 	for (i=MOTION1; i<MOTION_COUNT; i++)
 	{
 		if (status.uplimit[i] == 0)
-			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ÂÖÅËÆ∏‰∏äÂçá */
+			HAL_GPIO_WritePin(motion[i].io.nup_port, motion[i].io.nup_pin, GPIO_PIN_SET); /* ‘ –Ì…œ…˝ */
 	}
 }
 #endif
@@ -383,11 +388,11 @@ int main(void)
 #endif
 #ifdef ENV_SEND_SEAT_INFO
 	static uint8_t send_seat = 0;
-	static uint8_t send_buf[4] = {0xff,0xc1}; /* ÂõûÂ§çÂ∏ßÂ§¥ */
+	static uint8_t send_buf[4] = {0xff,0xc1}; /* ªÿ∏¥÷°Õ∑ */
 	static int send_index = 0;
 #endif
-	uint8_t update; /* ‰∏≤Âè£Êï∞ÊçÆÊõ¥Êñ∞Ê†áÂøó */
-	uint8_t init_flag = 0; /* ÂàùÂßãÂåñÊ†áÂáÜ‰Ωç */
+	uint8_t update; /* ¥Æø⁄ ˝æ›∏¸–¬±Í÷æ */
+	uint8_t init_flag = 0; /* ≥ı ºªØ±Í◊ºŒª */
   /* USER CODE END 1 */
 
   /* MCU Configuration----------------------------------------------------------*/
@@ -415,6 +420,7 @@ int main(void)
   MX_TIM3_Init();
   MX_USART1_UART_Init();
   MX_IWDG_Init();
+  MX_CAN_Init();
 
   /* USER CODE BEGIN 2 */
 #else
@@ -427,6 +433,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
+	MX_CAN_Init();
   /* MX_IWDG_Init(); */
 
 #endif
@@ -458,11 +465,13 @@ int main(void)
     user_adc_start();
 	user_time_init();
 	user_uart_init();
+	user_can_init();
+	sw_timer_init();
 	  
 	init_flag = 1;
-	  
 	while (init_flag != 0)
 	{
+		sw_timer_handle();
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -471,7 +480,8 @@ int main(void)
 		SAFE(update = frame.enable);
 		SAFE(free_ndown());
 		SAFE(free_nup());
-		if(update) /* ‰∏≤Âè£Êï∞ÊçÆÊõ¥Êñ∞ */
+        update=get_update_flag();    /////////////////////////DEBUG”√
+		if(update) /* ¥Æø⁄ ˝æ›∏¸–¬ */
 		{
 			SAFE(frame.enable = 0);
 			/*LED_START*/
@@ -479,48 +489,48 @@ int main(void)
 			led_count = led_count%10;
 			if(led_count == 0)
 			{
-				LED_TOGGLE(); /* Èó™ÁÉÅÊåáÁ§∫ÁÅØ */
+				LED_TOGGLE(); /* …¡À∏÷∏ æµ∆ */
 			}
 			/*LED_END*/
 			/*SEAT_START*/
 #ifdef ENV_SEAT_PICKING
-			if (seat_picking == 0) /* Â∫ßÊ§ÖÊú™Ë¢´ÈÄâ‰∏≠ */
+			if (seat_picking == 0) /* ◊˘“ŒŒ¥±ª—°÷– */
 			{
 				status.seat_enable = 0;
 			}
 #endif
-			if(status.seat_enable) /* Â∫ßÊ§Ö‰ΩøËÉΩ */
+			if(status.seat_enable) /* ◊˘“Œ πƒ‹ */
 			{
-				SAFE(status.spb = frame.buff[5]); /* Êõ¥Êñ∞ÁâπÊïà */
+				SAFE(status.spb = frame.buff[5]); /* ∏¸–¬Ãÿ–ß */
 #ifdef MOTION1_ENABLE
-				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* Êõ¥Êñ∞ÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* ∏¸–¬ƒø±ÍŒª÷√ */
 #else
-				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
 #endif
 #ifdef MOTION2_ENABLE
-				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* Êõ¥Êñ∞ÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* ∏¸–¬ƒø±ÍŒª÷√ */
 #else
-				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
 #endif
 #ifdef MOTION3_ENABLE
-				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* Êõ¥Êñ∞ÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* ∏¸–¬ƒø±ÍŒª÷√ */
 #else
-				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
 #endif
 			}
 			else
 			{
-				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
-				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
-				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* ÊÅ¢Â§çÁõÆÊ†á‰ΩçÁΩÆ */
-				SAFE(status.spb = frame.buff[5]); /* Êõ¥Êñ∞ÁâπÊïà */
+				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
+				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
+				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* ª÷∏¥ƒø±ÍŒª÷√ */
+				SAFE(status.spb = frame.buff[5]); /* ∏¸–¬Ãÿ–ß */
 #ifdef ENV_SWING_LINK
-				SAFE(status.spb &= SPB_AIR_INJECTION_MASK); /* ÊÅ¢Â§çÁâπÊïà */
+				SAFE(status.spb &= SPB_AIR_INJECTION_MASK); /* ª÷∏¥Ãÿ–ß */
 #else
-				SAFE(status.spb = 0); /* ÊÅ¢Â§çÁâπÊïà */
+				SAFE(status.spb = 0); /* ª÷∏¥Ãÿ–ß */
 #endif
 			}
-			status.id = 0; /* Êõ¥Êñ∞id */
+			status.id = 0; /* ∏¸–¬id */
 			if(GET_ID_1())
 				status.id = status.id + 1;
 			if(GET_ID_2())
@@ -538,25 +548,25 @@ int main(void)
 			if(GET_ID_80())
 				status.id = status.id + 80;
 #ifdef ENV_SEAT_PICKING
-			if (frame.buff[7] == 0xAA) /* ÈÄâ‰∏≠ÊâÄÊúâÂ∫ßÊ§Ö */
+			if (frame.buff[7] == 0xAA) /* —°÷–À˘”–◊˘“Œ */
 			{
 				seat_picking = 1;
 			}
-			else if (frame.buff[7] == 0x00) /* ÂèñÊ∂àÈÄâ‰∏≠ÊâÄÊúâÂ∫ßÊ§Ö */
+			else if (frame.buff[7] == 0x00) /* »°œ˚—°÷–À˘”–◊˘“Œ */
 			{
 				seat_picking = 0;
 			}
-			else if (frame.buff[7] == status.id) /* Ê†πÊçÆIDÈÄâ‰∏≠Â∫ßÊ§Ö */
+			else if (frame.buff[7] == status.id) /* ∏˘æ›ID—°÷–◊˘“Œ */
 			{
 				seat_picking = 1;
 			}
 			else
 			{
-				; /* Áª¥ÊåÅÂΩìÂâçÈÄâ‰∏≠ÊàñÊú™ÈÄâ‰∏≠Áä∂ÊÄÅ */
+				; /* Œ¨≥÷µ±«∞—°÷–ªÚŒ¥—°÷–◊¥Ã¨ */
 			}
 #endif
 #ifdef ENV_SEND_SEAT_INFO
-			if(frame.buff[7] == status.id) /* Âà§Êñ≠Â∫ßÊ§ÖÁºñÂè∑ */
+			if(frame.buff[7] == status.id) /* ≈–∂œ◊˘“Œ±‡∫≈ */
 			{
 				if (frame.buff[7] != 0x00)
 				{
@@ -572,7 +582,7 @@ int main(void)
 #ifdef ENV_SEND_SEAT_INFO
 		if(send_seat)
 		{
-			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485ÂèëÈÄÅ */
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485∑¢ÀÕ */
 			if(send_index == 0 || __HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
 			{
 				huart1.Instance->DR = send_buf[send_index];
@@ -587,12 +597,12 @@ int main(void)
 		else
 		{
 			if(__HAL_UART_GET_FLAG(&huart1, UART_FLAG_TXE) != RESET)
-			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET); /* 485Êé•Êî∂ */
+			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET); /* 485Ω” ’ */
 		}
 #endif
 		/*SEND_SEAT_END*/
 		/*SPB_START*/
-		SPB3(status.spb&(1<<2)); /* Êõ¥Êñ∞ÁâπÊïàÂà∞IOËæìÂá∫ */
+		SPB3(status.spb&(1<<2)); /* ∏¸–¬Ãÿ–ßµΩIO ‰≥ˆ */
 		SPB4(status.spb&(1<<3));
 		SPB5(status.spb&(1<<4));
 		SPB6(status.spb&(1<<5));
@@ -610,7 +620,7 @@ int main(void)
 		else
 		{
 			/*RST_END*/
-			HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1); /* Èò≤Ê≠¢‰∏≤Âè£Âá∫Èîô */
+			HAL_UART_Receive_IT(&huart1, (uint8_t *)&(frame.data), 1); /* ∑¿÷π¥Æø⁄≥ˆ¥Ì */
 		}
 	}
   }
@@ -689,7 +699,7 @@ static void MX_ADC1_Init(void)
   hadc1.Init.DiscontinuousConvMode = DISABLE;
   hadc1.Init.ExternalTrigConv = ADC_SOFTWARE_START;
   hadc1.Init.DataAlign = ADC_DATAALIGN_RIGHT;
-  hadc1.Init.NbrOfConversion = 5;
+  hadc1.Init.NbrOfConversion = 6;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
@@ -737,6 +747,38 @@ static void MX_ADC1_Init(void)
   sConfig.Channel = ADC_CHANNEL_5;
   sConfig.Rank = 5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+    /**Configure Regular Channel 
+    */
+  sConfig.Channel = ADC_CHANNEL_6;
+  sConfig.Rank = 6;
+  if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* CAN init function */
+static void MX_CAN_Init(void)
+{
+
+  hcan.Instance = CAN1;
+  hcan.Init.Prescaler = 12;
+  hcan.Init.Mode = CAN_MODE_NORMAL;
+  hcan.Init.SJW = CAN_SJW_1TQ;
+  hcan.Init.BS1 = CAN_BS1_5TQ;
+  hcan.Init.BS2 = CAN_BS2_6TQ;
+  hcan.Init.TTCM = DISABLE;
+  hcan.Init.ABOM = DISABLE;
+  hcan.Init.AWUM = DISABLE;
+  hcan.Init.NART = DISABLE;
+  hcan.Init.RFLM = DISABLE;
+  hcan.Init.TXFP = DISABLE;
+  if (HAL_CAN_Init(&hcan) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }
@@ -911,10 +953,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOD_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(OUTPUT_573LE1_GPIO_Port, OUTPUT_573LE1_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin 
+                          |OE_CE_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOC, OUTPUT_SEATLED2_Pin|OUTPUT_SEATLED1_Pin|OUTPUT_CLR1_Pin|OUTPUT_DIR3_Pin 
@@ -927,21 +967,27 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, OUTPUT_PUL2_Pin|OUTPUT_LED0_Pin|OUTPUT_LED1_Pin|OUTPUT_PUL3_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(OUTPUT_573LE3_GPIO_Port, OUTPUT_573LE3_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOE, Uplimit1_Pin|Downlimit1_Pin|Uplimit2_Pin|Downlimit2_Pin 
+                          |Uplimit3_Pin|Downlimit3_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, OUTPUT_485RW_Pin|OUTPUT_573LE2_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(GPIOD, OUTPUT_573LE2_Pin|OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin 
+                          |OUTPUT_NUP3_Pin|OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin 
+                          |OUTPUT_NUP1_Pin|OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOD, OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin|OUTPUT_NUP3_Pin|OUTPUT_NDOWN3_Pin 
-                          |OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin|OUTPUT_NDOWN1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET);
 
   /*Configure GPIO pin Output Level */
   HAL_GPIO_WritePin(GPIOB, OUTPUT_SP8_Pin|OUTPUT_SP7_Pin|OUTPUT_SP6_Pin|OUTPUT_SP5_Pin 
                           |OUTPUT_SP4_Pin|OUTPUT_SP3_Pin, GPIO_PIN_SET);
 
-  /*Configure GPIO pins : OUTPUT_SEATLED5_Pin OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin;
+  /*Configure GPIO pins : OUTPUT_SEATLED5_Pin OUTPUT_SEATLED4_Pin OUTPUT_SEATLED3_Pin OUTPUT_573LE1_Pin 
+                           Uplimit1_Pin Downlimit1_Pin Uplimit2_Pin Downlimit2_Pin 
+                           Uplimit3_Pin Downlimit3_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_SEATLED5_Pin|OUTPUT_SEATLED4_Pin|OUTPUT_SEATLED3_Pin|OUTPUT_573LE1_Pin 
+                          |Uplimit1_Pin|Downlimit1_Pin|Uplimit2_Pin|Downlimit2_Pin 
+                          |Uplimit3_Pin|Downlimit3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOE, &GPIO_InitStruct);
@@ -962,8 +1008,8 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUTPUT_PUL1_Pin OUTPUT_485RW_Pin OUTPUT_573LE2_Pin OUTPUT_CLR2_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_PUL1_Pin|OUTPUT_485RW_Pin|OUTPUT_573LE2_Pin|OUTPUT_CLR2_Pin;
+  /*Configure GPIO pins : OUTPUT_PUL1_Pin OUTPUT_485RW_Pin OUTPUT_CLR2_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_PUL1_Pin|OUTPUT_485RW_Pin|OUTPUT_CLR2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
@@ -984,12 +1030,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(INPUT_SW_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : OUTPUT_573LE3_Pin OUTPUT_DIR1_Pin OUTPUT_CLR3_Pin OUTPUT_NUP3_Pin 
-                           OUTPUT_NDOWN3_Pin OUTPUT_NUP2_Pin OUTPUT_NDOWN2_Pin OUTPUT_NUP1_Pin 
-                           OUTPUT_NDOWN1_Pin */
-  GPIO_InitStruct.Pin = OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin|OUTPUT_NUP3_Pin 
-                          |OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin|OUTPUT_NUP1_Pin 
-                          |OUTPUT_NDOWN1_Pin;
+  /*Configure GPIO pins : OUTPUT_573LE2_Pin OUTPUT_573LE3_Pin OUTPUT_DIR1_Pin OUTPUT_CLR3_Pin 
+                           OUTPUT_NUP3_Pin OUTPUT_NDOWN3_Pin OUTPUT_NUP2_Pin OUTPUT_NDOWN2_Pin 
+                           OUTPUT_NUP1_Pin OUTPUT_NDOWN1_Pin */
+  GPIO_InitStruct.Pin = OUTPUT_573LE2_Pin|OUTPUT_573LE3_Pin|OUTPUT_DIR1_Pin|OUTPUT_CLR3_Pin 
+                          |OUTPUT_NUP3_Pin|OUTPUT_NDOWN3_Pin|OUTPUT_NUP2_Pin|OUTPUT_NDOWN2_Pin 
+                          |OUTPUT_NUP1_Pin|OUTPUT_NDOWN1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
@@ -1005,6 +1051,12 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : OE_CE_Pin */
+  GPIO_InitStruct.Pin = OE_CE_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(OE_CE_GPIO_Port, &GPIO_InitStruct);
 
   /* EXTI interrupt init*/
   HAL_NVIC_SetPriority(EXTI0_IRQn, 0, 0);

@@ -9,7 +9,7 @@
   * inserted by the user or by software development tools
   * are owned by their respective copyright owners.
   *
-  * COPYRIGHT(c) 2017 STMicroelectronics
+  * COPYRIGHT(c) 2018 STMicroelectronics
   *
   * Redistribution and use in source and binary forms, with or without modification,
   * are permitted provided that the following conditions are met:
@@ -83,6 +83,8 @@
 #define ADC_SEAT4_GPIO_Port GPIOA
 #define ADC_SEAT5_Pin GPIO_PIN_5
 #define ADC_SEAT5_GPIO_Port GPIOA
+#define ADC_SEAT6_Pin GPIO_PIN_6
+#define ADC_SEAT6_GPIO_Port GPIOA
 #define EXTI_UPLIMIT3_Pin GPIO_PIN_4
 #define EXTI_UPLIMIT3_GPIO_Port GPIOC
 #define EXTI_UPLIMIT3_EXTI_IRQn EXTI4_IRQn
@@ -93,10 +95,24 @@
 #define OUTPUT_PUL2_GPIO_Port GPIOB
 #define OUTPUT_LED0_Pin GPIO_PIN_1
 #define OUTPUT_LED0_GPIO_Port GPIOB
+#define Uplimit1_Pin GPIO_PIN_7
+#define Uplimit1_GPIO_Port GPIOE
+#define Downlimit1_Pin GPIO_PIN_8
+#define Downlimit1_GPIO_Port GPIOE
+#define Uplimit2_Pin GPIO_PIN_9
+#define Uplimit2_GPIO_Port GPIOE
+#define Downlimit2_Pin GPIO_PIN_10
+#define Downlimit2_GPIO_Port GPIOE
+#define Uplimit3_Pin GPIO_PIN_11
+#define Uplimit3_GPIO_Port GPIOE
+#define Downlimit3_Pin GPIO_PIN_12
+#define Downlimit3_GPIO_Port GPIOE
 #define OUTPUT_LED1_Pin GPIO_PIN_12
 #define OUTPUT_LED1_GPIO_Port GPIOB
 #define INPUT_SW_Pin GPIO_PIN_13
 #define INPUT_SW_GPIO_Port GPIOB
+#define OUTPUT_573LE2_Pin GPIO_PIN_10
+#define OUTPUT_573LE2_GPIO_Port GPIOD
 #define OUTPUT_573LE3_Pin GPIO_PIN_11
 #define OUTPUT_573LE3_GPIO_Port GPIOD
 #define INPUT_BCD1_1_Pin GPIO_PIN_12
@@ -117,8 +133,6 @@
 #define INPUT_BCD8_2_GPIO_Port GPIOC
 #define OUTPUT_485RW_Pin GPIO_PIN_8
 #define OUTPUT_485RW_GPIO_Port GPIOA
-#define OUTPUT_573LE2_Pin GPIO_PIN_12
-#define OUTPUT_573LE2_GPIO_Port GPIOA
 #define OUTPUT_CLR2_Pin GPIO_PIN_15
 #define OUTPUT_CLR2_GPIO_Port GPIOA
 #define OUTPUT_CLR1_Pin GPIO_PIN_10
@@ -157,6 +171,8 @@
 #define OUTPUT_PUL3_GPIO_Port GPIOB
 #define OUTPUT_SP3_Pin GPIO_PIN_9
 #define OUTPUT_SP3_GPIO_Port GPIOB
+#define OE_CE_Pin GPIO_PIN_1
+#define OE_CE_GPIO_Port GPIOE
 
 /* ########################## Assert Selection ############################## */
 /**

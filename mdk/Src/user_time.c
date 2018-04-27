@@ -95,7 +95,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 		interval = (ENV_ACCER)/(set-now);
 	else
 		interval =  (ENV_ACCER)/(now-set);
+	 interval=interval*1.8;
 	interval = (interval<ENV_SPEED_MAX)?ENV_SPEED_MAX:interval;
 	__HAL_TIM_SET_AUTORELOAD(htim, interval);
 	SAFE(motion[index].high.now += output_pul(index, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET));	//计算步数
 }
+
