@@ -34,14 +34,14 @@ void can_rx_handle(void);
 static void can_tx_nm(void)
 {
 	//send STATUS_MSG_ID into can bus
-	LED_UP_LIMIT2_TOGGLE();
+//	LED_UP_LIMIT2_TOGGLE();
 	can_send(NM_MSG_ID, can_tx_buf[NM_MSG].data, 8);
 }
 
 static void can_tx_status(void)
 {
 	//send NM_MSG_ID into can bus
-	LED_UP_LIMIT3_TOGGLE();
+//	LED_UP_LIMIT3_TOGGLE();
 	can_send(STATUS_MSG_ID, can_tx_buf[STATUS_MSG].data, 8);
 }
 
@@ -83,7 +83,7 @@ void can_tx_servet_init(void)
 void task_can_tx(void)
 {
 	CAN1->IER|=(1<<1); //确保CAN可以在线热插拔；
-	LED_UP_LIMIT1_TOGGLE();
+//	LED_UP_LIMIT1_TOGGLE();
 	can_tx_handle();
 	can_rx_handle();
 }
@@ -280,6 +280,11 @@ uint8_t get_update_flag(void)
 	uint8_t update_byte;
 	SAFE(update_byte=update_flag);
 	return update_byte;
+}	
+/*清楚CAN数据更新位*/
+void clr_update_flag(void)
+{
+	SAFE(update_flag=0);
 }	
 /****************提供给外部的FLAG标志位更改*************************/
 void set_can_rx_flag(uint16_t msg_id)

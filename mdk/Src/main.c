@@ -391,7 +391,9 @@ int main(void)
 	static uint8_t send_buf[4] = {0xff,0xc1}; /* 回复帧头 */
 	static int send_index = 0;
 #endif
-	uint8_t update; /* 串口数据更新标志 */
+	 /* 串口数据更新标志 */
+	uint8_t update_485;
+	uint8_t update_can;
 	uint8_t init_flag = 0; /* 初始化标准位 */
   /* USER CODE END 1 */
 
@@ -419,7 +421,7 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
-  MX_IWDG_Init();
+  MX_IWDG_Init();	
   MX_CAN_Init();
 
   /* USER CODE BEGIN 2 */
@@ -462,28 +464,28 @@ int main(void)
 #endif
 	user_io_init();
 	user_motion_init(); 
-    user_adc_start();
+  user_adc_start();
 	user_time_init();
 	user_uart_init();
 	user_can_init();
-	sw_timer_init();
-	  
+	sw_timer_init(); 
 	init_flag = 1;
 	while (init_flag != 0)
 	{
-		sw_timer_handle();
+		sw_timer_handle();	
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
 		status.seat_enable = GET_SEAT_ENABLE();
 		SAFE(status.seat_enable += status.seat_num);
-		SAFE(update = frame.enable);
+		SAFE(update_485 = frame.enable);
 		SAFE(free_ndown());
 		SAFE(free_nup());
-        update=get_update_flag();    /////////////////////////DEBUG用
-		if(update) /* 串口数据更新 */
+    SAFE(update_can=get_update_flag()); 
+		if((update_485)||(update_can)) /* 串口数据更新 */
 		{
 			SAFE(frame.enable = 0);
+			SAFE(clr_update_flag()); 
 			/*LED_START*/
 			led_count++;
 			led_count = led_count%10;

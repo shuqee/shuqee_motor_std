@@ -33,6 +33,7 @@ extern void set_can_rx_flag(uint16_t);
 
 /*外部函数调用*/
 extern uint8_t get_update_flag(void);  /*获取CAN数据的更新位*/
+extern void clr_update_flag(void);
 extern void get_high_speed_date(uint16_t msg_addr,uint8_t * pData);  
 extern void set_status_msg(uint8_t *tx_data);
 extern void set_nm_msg(uint8_t *tx_data);
