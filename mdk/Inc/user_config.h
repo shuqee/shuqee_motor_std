@@ -35,9 +35,9 @@
 	#define MOTION3_CONFIG_ADJ		5
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓和利时驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/		
 	#ifdef SYNERON
-	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(170mm) */
-	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(1.5:1) */
-	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(5mm) */
+	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(170mm) */
+	#define ENV_CYLINDER_REDUCTION_RATIO (1.5/1.0) /* 电动缸减速比(1.5:1) */
+	#define ENV_CYLINDER_SCREW_LEAD 5.0 /* 电动缸丝杆导程(5mm) */
 	#define ENV_ELECTRONIC_GEAR_RATIO 40.0 /* 驱动器电子齿轮比(fn050:40) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	#define ENV_SPACE ((int)((ENV_CYLINDER_STROKE/ENV_CYLINDER_SCREW_LEAD) \
@@ -57,10 +57,10 @@
 	
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓东菱驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/	
 	#ifdef DIRNA
-	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(170mm) */
-	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(1.5:1) */
-	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(5mm) */
-	#define ENV_ELECTRONIC_GEAR_RATIO 5.0 /* 驱动器电子齿轮比(fn050:40) */
+	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(95mm) */
+	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(2.5:1) */
+	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(10mm) */
+	#define ENV_ELECTRONIC_GEAR_RATIO 50.0 /* 驱动器电子齿轮比(PA205:50) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	#define ENV_SPACE ((int)((ENV_CYLINDER_STROKE/ENV_CYLINDER_SCREW_LEAD) \
 	                         *ENV_CYLINDER_REDUCTION_RATIO \
