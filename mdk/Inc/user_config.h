@@ -6,19 +6,19 @@
 //#define DEBUG_ENV	//调试模式
 #define ENV_IWDG
 
-#define ENV_RESET_SPEED 800 //ENV_RESET_SPEED越大复位速度越慢
 
-#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
+
+//#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
-//#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
+#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
 //#define ENV_2DOF	           //二自由度平台摆杆式
 
 //#define ENV_SEAT_PICKING //选座功能(根据ID使能座椅)
 //#define ENV_SEND_SEAT_INFO //统计人数功能(根据ID使能反馈座椅人数功能)
 
-//#define SYNERON     //和利时驱动器
-#define DIRNA       //东菱驱动器
 #ifdef ENV_3DOF_NO_SENSOR
+  //#define SYNERON     //和利时驱动器
+	#define DIRNA       //东菱驱动器
 	#define ENV_NOSENSOR	//没有传感器
 	#define ENV_RESET	//复位
 	#define MOTION1_ENABLE
@@ -33,6 +33,7 @@
 	#define MOTION1_CONFIG_ADJ		5
 	#define MOTION2_CONFIG_ADJ		5
 	#define MOTION3_CONFIG_ADJ		5
+	#define ENV_RESET_SPEED 800 //ENV_RESET_SPEED越大复位速度越慢	
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓和利时驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/		
 	#ifdef SYNERON
 	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(170mm) */
@@ -93,12 +94,14 @@
 	#define MOTION1_CONFIG_ADJ		0
 	#define MOTION2_CONFIG_ADJ		0
 	#define MOTION3_CONFIG_ADJ		0
-	#define ENV_SPACE 25                  //位置扩大倍数
+//	#define ENV_SPACE 25                  //位置扩大倍数
+  #define ENV_SPACE 70             //东菱驱动器
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	/* 中速 */
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
 	/* 高速 */
 //	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)8)
+	#define ENV_RESET_SPEED 200 //ENV_RESET_SPEED越大复位速度越慢
 #endif
 
 #ifdef ENV_2DOF
@@ -118,6 +121,7 @@
 	#define ENV_SPACE 25                  //位置扩大倍数
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
+	#define ENV_RESET_SPEED 200 //ENV_RESET_SPEED越大复位速度越慢	
 #endif
 
 #define SPB_AIR_INJECTION_MASK (0x1<<6)

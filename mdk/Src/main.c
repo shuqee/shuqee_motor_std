@@ -73,6 +73,7 @@ struct motion_status motion[MOTION_COUNT] = {MOTION1};
 struct status status = {0};
 int flag_rst = 0;	//reset flag
 
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -116,6 +117,22 @@ void delay_ms(uint32_t times)
 	count = times;
 	while(count--)
 		delay_us(1000);
+}
+
+/*外部中断屏蔽模块*/
+void exti_mask(void)
+{
+	EXTI->IMR &=~(1<<1);  //1中断屏蔽模
+	EXTI->IMR &=~(1<<3);	 //3中断屏蔽模
+	EXTI->IMR &=~(1<<5);  //5中断屏蔽模
+}	
+
+/*外部中断开启模块*/
+void exti_open(void)
+{
+	EXTI->IMR |=1<<1;  //1开启屏蔽模
+	EXTI->IMR |=1<<3;	 //3开启屏蔽模
+	EXTI->IMR |=1<<5;  //5开启屏蔽模
 }
 
 #ifdef ENV_RESET
@@ -268,6 +285,9 @@ void find_origin(void) /* reset function */
 		HAL_IWDG_Refresh(&hiwdg); /* have to refresh the iwdg */
 #endif
 	}
+	#ifdef DIRNA
+	exti_mask();  //屏蔽外部中断；
+	#endif
 }
 #endif
 
@@ -617,6 +637,9 @@ int main(void)
 			user_adc_stop();
 			user_time_stop();
 			user_uart_stop();
+#ifdef DIRNA
+			exti_open();  //开启外部中断；
+#endif
 			init_flag = 0;
 		}
 		else

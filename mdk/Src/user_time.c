@@ -89,13 +89,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		interval = 999;
 		__HAL_TIM_SET_AUTORELOAD(htim, interval);
+//		/*监控上位机脉冲发送量*/
+//		if(motion[index].high.printf_flag==0)
+//		{
+//			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_RESET); /* 485发送 */
+//			printf("The motion %d %d",index,motion[index].high.now);
+//			HAL_GPIO_WritePin(OUTPUT_485RW_GPIO_Port, OUTPUT_485RW_Pin, GPIO_PIN_SET); /* 485*/
+//			motion[index].high.printf_flag=1;
+//		}	
+//		/*监控上位机脉冲发送量*/
 		return;
 	}
 	if(now < set)
+	{
 		interval = (ENV_ACCER)/(set-now);
+	}
 	else
+	{
 		interval =  (ENV_ACCER)/(now-set);
-	 interval=interval*1.8;
+	}
+//	 interval=interval*1.8;
 	interval = (interval<ENV_SPEED_MAX)?ENV_SPEED_MAX:interval;
 	__HAL_TIM_SET_AUTORELOAD(htim, interval);
 	SAFE(motion[index].high.now += output_pul(index, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET));	//计算步数
