@@ -90,7 +90,7 @@ static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
-
+static void exti_interrupt_filter(void);
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -284,9 +284,10 @@ void find_origin(void) /* reset function */
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg); /* have to refresh the iwdg */
 #endif
+		exti_interrupt_filter();
 	}
 	#ifdef DIRNA
-	exti_mask();  //屏蔽外部中断；
+//	exti_mask();  //屏蔽外部中断；
 	#endif
 }
 #endif
@@ -396,11 +397,82 @@ void free_nup(void)
 }
 #endif
 
+//////////////////////////////////////////////////////////////////////////////
+void exti_interrupt_filter(void)
+{  
+	uint8_t index;
+	for(index=0;index<MOTION_COUNT;index++)
+	{
+		if(flag_rst )//复位；
+		{
+			if(status.uplimit[index]==1)
+			{
+				if (HAL_GetTick() - status.uplimit_count_time[index]>=RESET_FILTER_TIME)
+				{
+					status.uplimit_flag[index]=1;
+					if(index==1)
+					Uplimit1(1);
+				}
+			}	
+			else
+			{
+				status.uplimit_count_time[index]=  HAL_GetTick();				
+				status.uplimit_flag[index]=0;
+			}
+			if(status.downlimit[index]==1)
+			{
+				if (HAL_GetTick() - status.downlimit_count_time[index]>=RESET_FILTER_TIME)
+				{
+					status.downlimit_flag[index]=1;
+					if(index==1)
+					Downlimit1(1);
+				}
+			}	
+			else
+			{
+				status.downlimit_count_time[index]=  HAL_GetTick();
+				status.downlimit_flag[index]=0;
+			}	
+		}
+	if(flag_rst==0 )//正常运行;
+	{
+		if(status.uplimit[index]==1)
+		{
+			if (HAL_GetTick() - status.uplimit_count_time[index]>=RUN_TILTER_TIME)
+			{
+				status.uplimit_flag[index]=1;
+				if(index==1)
+				Uplimit2(1);
+				up_limit(index);
+			}
+		}	
+		else
+		{
+			status.uplimit_count_time[index]=  HAL_GetTick();
+			status.uplimit_flag[index]=0;
+		}
+		if(status.downlimit[index]==1)
+		{
+			if (HAL_GetTick() - status.downlimit_count_time[index]>=RUN_TILTER_TIME)
+			{
+				status.downlimit_flag[index]=1;
+				if(index==1)
+				Downlimit2(1);	
+				down_limit(index);				
+			}
+		}	
+		else
+		{
+			status.downlimit_count_time[index]=  HAL_GetTick();
+			status.downlimit_flag[index]=0;
+		}		
+	}
+ }	
+}
 /* USER CODE END 0 */
 
 int main(void)
 {
-
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
 #ifdef ENV_SEAT_PICKING
@@ -484,7 +556,7 @@ int main(void)
 #endif
 	user_io_init();
 	user_motion_init(); 
-  user_adc_start();
+    user_adc_start();
 	user_time_init();
 	user_uart_init();
 	user_can_init();
@@ -492,6 +564,7 @@ int main(void)
 	init_flag = 1;
 	while (init_flag != 0)
 	{
+		exti_interrupt_filter();
 		sw_timer_handle();	
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
@@ -638,7 +711,7 @@ int main(void)
 			user_time_stop();
 			user_uart_stop();
 #ifdef DIRNA
-			exti_open();  //开启外部中断；
+//			exti_open();  //开启外部中断；
 #endif
 			init_flag = 0;
 		}

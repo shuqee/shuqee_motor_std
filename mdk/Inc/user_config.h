@@ -4,13 +4,13 @@
 #include "stm32f1xx_hal.h"
 
 //#define DEBUG_ENV	//调试模式
-#define ENV_IWDG
+//#define ENV_IWDG
 
 
 
-//#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
+#define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
 //#define ENV_3DOF	           //三自由度平台直线缸式
-#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
+//#define ENV_3DOF_SWING_LINK  //三自由度平台摆杆式
 //#define ENV_2DOF	           //二自由度平台摆杆式
 
 //#define ENV_SEAT_PICKING //选座功能(根据ID使能座椅)
@@ -58,6 +58,8 @@
 	
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓东菱驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/	
 	#ifdef DIRNA
+	#define RESET_FILTER_TIME 20
+	#define RUN_TILTER_TIME 60
 	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(95mm) */
 	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(2.5:1) */
 	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(10mm) */
@@ -183,7 +185,14 @@ struct status
 	uint8_t spb;				//座椅特效
 	uint8_t uplimit[MOTION_COUNT];
 	uint8_t downlimit[MOTION_COUNT];
+	uint8_t uplimit_flag[MOTION_COUNT];
+	uint8_t downlimit_flag[MOTION_COUNT];
+	uint32_t uplimit_count_time[MOTION_COUNT];
+	uint32_t downlimit_count_time[MOTION_COUNT]; 
+	uint32_t uplimit_count[MOTION_COUNT];
+	uint32_t downlimit_count[MOTION_COUNT]; 
 };
+
 
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;

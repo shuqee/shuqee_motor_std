@@ -1,6 +1,7 @@
 #ifndef __USER_IO_H
 #define __USER_IO_H
-
+#include "stm32f1xx_hal.h"
+#include "user_config.h"
 #define LED_SEAT1(x) HAL_GPIO_WritePin(OUTPUT_SEATLED1_GPIO_Port, OUTPUT_SEATLED1_Pin, (GPIO_PinState)(!(x)))
 #define LED_SEAT2(x) HAL_GPIO_WritePin(OUTPUT_SEATLED2_GPIO_Port, OUTPUT_SEATLED2_Pin, (GPIO_PinState)(!(x)))
 #define LED_SEAT3(x) HAL_GPIO_WritePin(OUTPUT_SEATLED3_GPIO_Port, OUTPUT_SEATLED3_Pin, (GPIO_PinState)(!(x)))
@@ -61,4 +62,6 @@ extern void user_io_init(void);
 extern void user_adc_start(void);
 extern void user_adc_stop(void);
 
+extern void down_limit(enum motion_num index);
+extern void up_limit(enum motion_num index);
 #endif /* __USER_IO_H */
