@@ -58,8 +58,8 @@
 	
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓东菱驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/	
 	#ifdef DIRNA
-	#define RESET_FILTER_TIME 20
-	#define RUN_TILTER_TIME 500
+	#define RESET_FILTER_TIME 20            //定义复位的转矩到达时间过滤器；
+	#define RUN_TILTER_TIME 500							//定义正常运行的转矩到达时间过滤器；
 	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(95mm) */
 	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(2.5:1) */
 	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(10mm) */
@@ -185,12 +185,8 @@ struct status
 	uint8_t spb;				//座椅特效
 	uint8_t uplimit[MOTION_COUNT];
 	uint8_t downlimit[MOTION_COUNT];
-	uint8_t uplimit_flag[MOTION_COUNT];
-	uint8_t downlimit_flag[MOTION_COUNT];
 	uint32_t uplimit_count_time[MOTION_COUNT];
 	uint32_t downlimit_count_time[MOTION_COUNT]; 
-	uint32_t uplimit_count[MOTION_COUNT];
-	uint32_t downlimit_count[MOTION_COUNT]; 
 };
 
 

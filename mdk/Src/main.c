@@ -284,11 +284,10 @@ void find_origin(void) /* reset function */
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg); /* have to refresh the iwdg */
 #endif
+#ifdef DIRNA		
 		exti_interrupt_filter();
+#endif		
 	}
-	#ifdef DIRNA
-//	exti_mask();  //屏蔽外部中断；
-	#endif
 }
 #endif
 
@@ -397,11 +396,29 @@ void free_nup(void)
 }
 #endif
 
-//////////////////////////////////////////////////////////////////////////////
+#ifdef DIRNA
+uint16_t recognize_limit_time(enum motion_num index)
+{
+	if((motion[index].high.now<=0x10)&&(motion[index].high.now>=0)&&(motion[index].dir==(GPIO_PinState)1))  //0x00-0x10
+	{
+		return RESET_FILTER_TIME;
+	}	
+	if((motion[index].high.now<=0xff)&&(motion[index].high.now>=0xef)&&(motion[index].dir==(GPIO_PinState)0))  //0xef-0xff
+	{
+		return RESET_FILTER_TIME;
+	}	
+	if((motion[index].high.now<0xef)&&(motion[index].high.now>0x10))  //0x00-0x10
+	{
+		return RUN_TILTER_TIME;
+	}	
+ return RUN_TILTER_TIME;	
+}	
 void exti_interrupt_filter(void)
 {  
-	uint8_t index;
-	for(index=0;index<MOTION_COUNT;index++)
+	enum motion_num index;
+	static uint8_t protection_flag;
+	uint32_t temp;
+	for(index=MOTION1;index<MOTION_COUNT;index++)
 	{
 		if(flag_rst )//复位；
 		{
@@ -409,66 +426,81 @@ void exti_interrupt_filter(void)
 			{
 				if (HAL_GetTick() - status.uplimit_count_time[index]>=RESET_FILTER_TIME)
 				{
-					status.uplimit_flag[index]=1;
-					if(index==1)
-					Uplimit1(1);
+					if(index==MOTION2)	//测试用
+					Uplimit1(1);				//测试用
 				}
 			}	
 			else
 			{
 				status.uplimit_count_time[index]=  HAL_GetTick();				
-				status.uplimit_flag[index]=0;
 			}
 			if(status.downlimit[index]==1)
 			{
 				if (HAL_GetTick() - status.downlimit_count_time[index]>=RESET_FILTER_TIME)
 				{
-					status.downlimit_flag[index]=1;
-					if(index==1)
-					Downlimit1(1);
+					if(index==MOTION2)	//测试用
+					Downlimit1(1);			//测试用
 				}
 			}	
 			else
 			{
 				status.downlimit_count_time[index]=  HAL_GetTick();
-				status.downlimit_flag[index]=0;
 			}	
 		}
 	if(flag_rst==0 )//正常运行;
 	{
 		if(status.uplimit[index]==1)
 		{
-			if (HAL_GetTick() - status.uplimit_count_time[index]>=RUN_TILTER_TIME)
+			if(HAL_GetTick()<recognize_limit_time(index))  //确定滴答时钟是否不满足时间LIMIT
 			{
-				status.uplimit_flag[index]=1;
-				if(index==1)
-				Uplimit2(1);
+				protection_flag=1;
+			}
+			if (HAL_GetTick() - status.uplimit_count_time[index]>=recognize_limit_time(index))
+			{
+				if(protection_flag)
+				{
+					temp=status.uplimit_count_time[index];
+					status.uplimit_count_time[index]=  HAL_GetTick()-temp;
+					protection_flag=0;
+					continue;
+				}	
+				if(index==MOTION2)		//测试用
+				Uplimit2(1);					//测试用
 				up_limit(index);
 			}
 		}	
 		else
 		{
 			status.uplimit_count_time[index]=  HAL_GetTick();
-			status.uplimit_flag[index]=0;
 		}
 		if(status.downlimit[index]==1)
 		{
-			if (HAL_GetTick() - status.downlimit_count_time[index]>=RUN_TILTER_TIME)
+			if(HAL_GetTick()<recognize_limit_time(index))  //确定滴答时钟是否不满足时间LIMIT
 			{
-				status.downlimit_flag[index]=1;
-				if(index==1)
-				Downlimit2(1);	
+				protection_flag=1;
+			}			
+			if (HAL_GetTick() - status.downlimit_count_time[index]>=recognize_limit_time(index))
+			{
+				if(protection_flag)
+				{
+					temp=status.uplimit_count_time[index];
+					status.uplimit_count_time[index]=  HAL_GetTick()-temp;
+					protection_flag=0;					
+					continue;
+				}					
+				if(index==MOTION2)  //测试用
+				Downlimit2(1);	    //测试用
 				down_limit(index);				
 			}
 		}	
 		else
 		{
 			status.downlimit_count_time[index]=  HAL_GetTick();
-			status.downlimit_flag[index]=0;
 		}		
 	}
  }	
 }
+#endif
 /* USER CODE END 0 */
 
 int main(void)
@@ -556,7 +588,7 @@ int main(void)
 #endif
 	user_io_init();
 	user_motion_init(); 
-    user_adc_start();
+  user_adc_start();
 	user_time_init();
 	user_uart_init();
 	user_can_init();
@@ -564,7 +596,9 @@ int main(void)
 	init_flag = 1;
 	while (init_flag != 0)
 	{
+#ifdef DIRNA		
 		exti_interrupt_filter();
+#endif		
 		sw_timer_handle();	
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
@@ -710,9 +744,6 @@ int main(void)
 			user_adc_stop();
 			user_time_stop();
 			user_uart_stop();
-#ifdef DIRNA
-//			exti_open();  //开启外部中断；
-#endif
 			init_flag = 0;
 		}
 		else
