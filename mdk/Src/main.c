@@ -416,7 +416,6 @@ uint16_t recognize_limit_time(enum motion_num index)
 void exti_interrupt_filter(void)
 {  
 	enum motion_num index;
-	static uint8_t protection_flag;
 	uint32_t temp;
 	for(index=MOTION1;index<MOTION_COUNT;index++)
 	{
@@ -452,16 +451,16 @@ void exti_interrupt_filter(void)
 		if(status.uplimit[index]==1)
 		{
 			if(HAL_GetTick()<recognize_limit_time(index))  //确定滴答时钟是否不满足时间LIMIT
-			{
-				protection_flag=1;
+			{ 
+				status.protection_up_flag[index]=1; 
 			}
 			if (HAL_GetTick() - status.uplimit_count_time[index]>=recognize_limit_time(index))
 			{
-				if(protection_flag)
+				if(status.protection_up_flag[index])
 				{
 					temp=status.uplimit_count_time[index];
 					status.uplimit_count_time[index]=  HAL_GetTick()-temp;
-					protection_flag=0;
+					status.protection_up_flag[index]=0;  
 					continue;
 				}	
 				if(index==MOTION2)		//测试用
@@ -477,15 +476,15 @@ void exti_interrupt_filter(void)
 		{
 			if(HAL_GetTick()<recognize_limit_time(index))  //确定滴答时钟是否不满足时间LIMIT
 			{
-				protection_flag=1;
+				status.protection_down_flag[index]=1;
 			}			
 			if (HAL_GetTick() - status.downlimit_count_time[index]>=recognize_limit_time(index))
 			{
-				if(protection_flag)
+				if(status.protection_down_flag[index])
 				{
 					temp=status.uplimit_count_time[index];
 					status.uplimit_count_time[index]=  HAL_GetTick()-temp;
-					protection_flag=0;					
+					status.protection_down_flag[index]=0;					
 					continue;
 				}					
 				if(index==MOTION2)  //测试用
@@ -628,6 +627,22 @@ int main(void)
 				status.seat_enable = 0;
 			}
 #endif
+///////////////////////////////////////////////////////////////////
+			uint8_t msg_buff_l[8]={0};
+			uint8_t a,b,c;
+			get_high_speed_date(HIGHT_MSG_P,msg_buff_l);          //示例；
+			get_high_speed_date(ENV_SP_P,&a);
+			get_high_speed_date(SEAT_ID_P,&b);
+			get_high_speed_date(SEAT_SP_P,&c);
+      
+			frame.buff[4]=msg_buff_l[0];
+			frame.buff[3]=msg_buff_l[1];
+			frame.buff[2]=msg_buff_l[2];
+			
+			frame.buff[5]=c;
+			frame.buff[7]=b;
+			////////////////////////////////////////////////////////////
+		
 			if(status.seat_enable) /* 座椅使能 */
 			{
 				SAFE(status.spb = frame.buff[5]); /* 更新特效 */

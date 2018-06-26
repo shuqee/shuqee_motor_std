@@ -20,7 +20,7 @@
   //#define SYNERON     //和利时驱动器
 	#define DIRNA       //东菱驱动器
 	#define ENV_NOSENSOR	//没有传感器
-	#define ENV_RESET	//复位
+//	#define ENV_RESET	//复位
 	#define MOTION1_ENABLE
 	#define MOTION2_ENABLE
 	#define MOTION3_ENABLE
@@ -63,7 +63,7 @@
 	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(95mm) */
 	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(2.5:1) */
 	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(10mm) */
-	#define ENV_ELECTRONIC_GEAR_RATIO 50.0 /* 驱动器电子齿轮比(PA205:50) */
+	#define ENV_ELECTRONIC_GEAR_RATIO 25.0 /* 驱动器电子齿轮比(PA205:50) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	#define ENV_SPACE ((int)((ENV_CYLINDER_STROKE/ENV_CYLINDER_SCREW_LEAD) \
 	                         *ENV_CYLINDER_REDUCTION_RATIO \
@@ -187,6 +187,8 @@ struct status
 	uint8_t downlimit[MOTION_COUNT];
 	uint32_t uplimit_count_time[MOTION_COUNT];
 	uint32_t downlimit_count_time[MOTION_COUNT]; 
+	uint8_t protection_up_flag[MOTION_COUNT];
+	uint8_t protection_down_flag[MOTION_COUNT];
 };
 
 

@@ -172,7 +172,24 @@
           <Name>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F10x_512 -FS08000000 -FL080000 -FP0($$Device:STM32F103VE$Flash/STM32F10x_512.FLM))</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint/>
+      <Breakpoint>
+        <Bp>
+          <Number>0</Number>
+          <Type>0</Type>
+          <LineNumber>642</LineNumber>
+          <EnabledFlag>1</EnabledFlag>
+          <Address>134234772</Address>
+          <ByteObject>0</ByteObject>
+          <HtxType>0</HtxType>
+          <ManyObjects>0</ManyObjects>
+          <SizeOfObject>0</SizeOfObject>
+          <BreakByAccess>0</BreakByAccess>
+          <BreakIfRCount>1</BreakIfRCount>
+          <Filename>C:\Users\SHUQUEE8006\Desktop\閽婃枃浠?鐢靛姩搴ф\SQ-4DEC-V3.1.3\婧愮▼搴?鏈€鏂版鏋?鏂扮數鍔ㄥ骇妞呮澘涓滆彵鐗堟湰\鏈€鏂版鏋?鏂扮數鍔ㄥ骇妞呮澘婧愮▼搴?shuqee_motor_std\mdk\Src\main.c</Filename>
+          <ExecCommand></ExecCommand>
+          <Expression>\\ef\../Src/main.c\642</Expression>
+        </Bp>
+      </Breakpoint>
       <WatchWindow1>
         <Ww>
           <count>0</count>
@@ -208,6 +225,11 @@
           <count>6</count>
           <WinNumber>1</WinNumber>
           <ItemText>c</ItemText>
+        </Ww>
+        <Ww>
+          <count>7</count>
+          <WinNumber>1</WinNumber>
+          <ItemText>frame</ItemText>
         </Ww>
       </WatchWindow1>
       <Tracepoint>
