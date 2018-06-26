@@ -6,7 +6,7 @@
 extern UART_HandleTypeDef huart1;
 
 struct frame frame = {0};
-
+uint8_t can_or_485=0;
 void user_uart_init(void)
 {
 	memset((void *)&frame, 0, sizeof(frame));
@@ -50,6 +50,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			case 0xee:
 				frame.enable = 1;
 				frame.index = 0;
+			  can_or_485=1;
 				break;
 			default :
 				frame.index = 0;

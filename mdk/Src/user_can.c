@@ -123,6 +123,7 @@ void can_send(uint16_t msg_id, uint8_t *data, uint16_t len)
 	CAN1->IER|=(1<<1);
 }
 
+
 void HAL_CAN_RxCpltCallback(CAN_HandleTypeDef* hcan)
 {   
 	/*分析接收到的是什么数据*/

@@ -81,26 +81,21 @@
       <Books>
         <Book>
           <Number>0</Number>
-          <Title>Quick Start Guide (MCBSTM32E)</Title>
-          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Boards/Keil/MCBSTM32E/Documentation/STM32E_QSG.pdf</Path>
+          <Title>Base Board Schematics (MCBSTM32E)</Title>
+          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Documents\mcbstm32e-base-board-schematics.pdf</Path>
         </Book>
         <Book>
           <Number>1</Number>
-          <Title>Base Board Schematics (MCBSTM32E)</Title>
-          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Boards/Keil/MCBSTM32E/Documentation/mcbstm32e-base-board-schematics.pdf</Path>
+          <Title>Display Board Schematics (MCBSTM32E)</Title>
+          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Documents\mcbstm32e-display-board-schematics.pdf</Path>
         </Book>
         <Book>
           <Number>2</Number>
-          <Title>Display Board Schematics (MCBSTM32E)</Title>
-          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Boards/Keil/MCBSTM32E/Documentation/mcbstm32e-display-board-schematics.pdf</Path>
+          <Title>User Manual (MCBSTM32E)</Title>
+          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\1.0.5\Documents\mcbstm32e.chm</Path>
         </Book>
         <Book>
           <Number>3</Number>
-          <Title>User Manual (MCBSTM32E)</Title>
-          <Path>C:\Keil_v5\ARM\PACK\Keil\STM32F1xx_DFP\2.2.0\Boards/Keil/MCBSTM32E/Documentation/mcbstm32e.chm</Path>
-        </Book>
-        <Book>
-          <Number>4</Number>
           <Title>MCBSTM32E Evaluation Board Web Page (MCBSTM32E)</Title>
           <Path>http://www.keil.com/mcbstm32e/</Path>
         </Book>
@@ -172,24 +167,7 @@
           <Name>UL2CM3(-S0 -C0 -P0 -FD20000000 -FC1000 -FN1 -FF0STM32F10x_512 -FS08000000 -FL080000 -FP0($$Device:STM32F103VE$Flash/STM32F10x_512.FLM))</Name>
         </SetRegEntry>
       </TargetDriverDllRegistry>
-      <Breakpoint>
-        <Bp>
-          <Number>0</Number>
-          <Type>0</Type>
-          <LineNumber>642</LineNumber>
-          <EnabledFlag>1</EnabledFlag>
-          <Address>134234772</Address>
-          <ByteObject>0</ByteObject>
-          <HtxType>0</HtxType>
-          <ManyObjects>0</ManyObjects>
-          <SizeOfObject>0</SizeOfObject>
-          <BreakByAccess>0</BreakByAccess>
-          <BreakIfRCount>1</BreakIfRCount>
-          <Filename>C:\Users\SHUQUEE8006\Desktop\閽婃枃浠?鐢靛姩搴ф\SQ-4DEC-V3.1.3\婧愮▼搴?鏈€鏂版鏋?鏂扮數鍔ㄥ骇妞呮澘涓滆彵鐗堟湰\鏈€鏂版鏋?鏂扮數鍔ㄥ骇妞呮澘婧愮▼搴?shuqee_motor_std\mdk\Src\main.c</Filename>
-          <ExecCommand></ExecCommand>
-          <Expression>\\ef\../Src/main.c\642</Expression>
-        </Bp>
-      </Breakpoint>
+      <Breakpoint/>
       <WatchWindow1>
         <Ww>
           <count>0</count>

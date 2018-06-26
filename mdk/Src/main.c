@@ -514,6 +514,7 @@ int main(void)
 	static uint8_t send_buf[4] = {0xff,0xc1}; /* 回复帧头 */
 	static int send_index = 0;
 #endif
+
 	 /* 串口数据更新标志 */
 	uint8_t update_485;
 	uint8_t update_can;
@@ -599,6 +600,7 @@ int main(void)
 		exti_interrupt_filter();
 #endif		
 		sw_timer_handle();	
+		can_rx_handle(); 
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -627,10 +629,12 @@ int main(void)
 				status.seat_enable = 0;
 			}
 #endif
-///////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////	
+		if(!can_or_485)
+		{
 			uint8_t msg_buff_l[8]={0};
-			uint8_t a,b,c;
-			get_high_speed_date(HIGHT_MSG_P,msg_buff_l);          //示例；
+	    uint8_t a,b,c;
+			get_high_speed_date(HIGHT_MSG_P,msg_buff_l);       
 			get_high_speed_date(ENV_SP_P,&a);
 			get_high_speed_date(SEAT_ID_P,&b);
 			get_high_speed_date(SEAT_SP_P,&c);
@@ -641,6 +645,7 @@ int main(void)
 			
 			frame.buff[5]=c;
 			frame.buff[7]=b;
+		}
 			////////////////////////////////////////////////////////////
 		
 			if(status.seat_enable) /* 座椅使能 */

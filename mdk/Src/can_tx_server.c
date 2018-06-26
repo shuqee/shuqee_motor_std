@@ -2,6 +2,7 @@
 #include "user_io.h"
 #include "user_can.h"
 #include "string.h"
+#include "user_uart.h"
 #include "user_config.h"
 
 typedef void(*p_fun_t)(void);
@@ -84,8 +85,7 @@ void task_can_tx(void)
 {
 	CAN1->IER|=(1<<1); //确保CAN可以在线热插拔；
 	LED_UP_LIMIT1_TOGGLE();
-	can_tx_handle();
-	can_rx_handle();
+	can_tx_handle(); 
 }
 
 /**********************CAN的任务进程函数******************************/
@@ -254,10 +254,11 @@ void can_rx_handle(void)
 			{
 				can_send(HEART_BEAT_ID+status.id,can_hb_buff, 8);
 			}	
-			if(index==3) 
-			{
+//			if(index==3) 
+//			{
 				update_flag=1;
-			}	
+			  can_or_485=0; 
+//			}	
 			can_rx_table[index].can_rx();
 			can_rx_table[index].flag=0;
 			can_rx_table[index].count=0;
