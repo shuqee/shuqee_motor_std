@@ -17,10 +17,10 @@
 //#define ENV_SEND_SEAT_INFO //统计人数功能(根据ID使能反馈座椅人数功能)
 
 #ifdef ENV_3DOF_NO_SENSOR
-  //#define SYNERON     //和利时驱动器
-	#define DIRNA       //东菱驱动器
+  #define SYNERON     //和利时驱动器
+//	#define DIRNA       //东菱驱动器
 	#define ENV_NOSENSOR	//没有传感器
-//	#define ENV_RESET	//复位
+	#define ENV_RESET	//复位
 	#define MOTION1_ENABLE
 	#define MOTION2_ENABLE
 	#define MOTION3_ENABLE
@@ -36,10 +36,10 @@
 	#define ENV_RESET_SPEED 800 //ENV_RESET_SPEED越大复位速度越慢	
 	/*↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓和利时驱动电机参数↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*/		
 	#ifdef SYNERON
-	#define ENV_CYLINDER_STROKE 170.0 /* 电动缸行程(170mm) */
-	#define ENV_CYLINDER_REDUCTION_RATIO (1.5/1.0) /* 电动缸减速比(1.5:1) */
-	#define ENV_CYLINDER_SCREW_LEAD 5.0 /* 电动缸丝杆导程(5mm) */
-	#define ENV_ELECTRONIC_GEAR_RATIO 40.0 /* 驱动器电子齿轮比(fn050:40) */
+	#define ENV_CYLINDER_STROKE 150.0 /* 电动缸行程A:(150mm) B:(170mm)*/
+	#define ENV_CYLINDER_REDUCTION_RATIO (1.5/1.0) /* 电动缸减速比A:(1.5:1) B:(1.8:1) */
+	#define ENV_CYLINDER_SCREW_LEAD 5.0 /* 电动缸丝杆导程A:(5mm) B:(10mm)*/
+	#define ENV_ELECTRONIC_GEAR_RATIO 40.0 /* 驱动器电子齿轮比A:(fn050:40) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	#define ENV_SPACE ((int)((ENV_CYLINDER_STROKE/ENV_CYLINDER_SCREW_LEAD) \
 	                         *ENV_CYLINDER_REDUCTION_RATIO \
@@ -63,7 +63,7 @@
 	#define ENV_CYLINDER_STROKE 95.0 /* 电动缸行程(95mm) */
 	#define ENV_CYLINDER_REDUCTION_RATIO (2.5/1.0) /* 电动缸减速比(2.5:1) */
 	#define ENV_CYLINDER_SCREW_LEAD 10.0 /* 电动缸丝杆导程(10mm) */
-	#define ENV_ELECTRONIC_GEAR_RATIO 25.0 /* 驱动器电子齿轮比(PA205:50) */
+	#define ENV_ELECTRONIC_GEAR_RATIO 50.0 /* 驱动器电子齿轮比(PA205:50) */
 	#define ENV_CYLINDER_STROKE_PERCENT (90.0/100.0) /* 电动缸行程有效使用率(90%)(按百分比计算,不允许使用超过95%的行程,防止撞缸) */
 	#define ENV_SPACE ((int)((ENV_CYLINDER_STROKE/ENV_CYLINDER_SCREW_LEAD) \
 	                         *ENV_CYLINDER_REDUCTION_RATIO \

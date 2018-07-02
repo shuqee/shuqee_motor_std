@@ -35,15 +35,15 @@ void can_rx_handle(void);
 static void can_tx_nm(void)
 {
 	//send STATUS_MSG_ID into can bus
-	LED_UP_LIMIT2_TOGGLE();
-	can_send(NM_MSG_ID, can_tx_buf[NM_MSG].data, 8);
+//	LED_UP_LIMIT2_TOGGLE();
+//	can_send(NM_MSG_ID, can_tx_buf[NM_MSG].data, 8);
 }
 
 static void can_tx_status(void)
 {
 	//send NM_MSG_ID into can bus
-	LED_UP_LIMIT3_TOGGLE();
-	can_send(STATUS_MSG_ID, can_tx_buf[STATUS_MSG].data, 8);
+//	LED_UP_LIMIT3_TOGGLE();
+//	can_send(STATUS_MSG_ID, can_tx_buf[STATUS_MSG].data, 8);
 }
 
 /**********************CAN数组形式的任务内容的添加******************************/
@@ -243,36 +243,37 @@ uint8_t can_hb_buff[8]={0,0x01,0x55};
 
 void can_rx_handle(void)
 {
-	can_rx_msg_t index;
-	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
-	{
-		if(can_rx_table[index].flag==1)
-		{
+//	can_rx_msg_t index;
+//	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
+//	{
+//		if(can_rx_table[index].flag==1)
+//		{
 			/*返回心跳信号*/
 			/*can_hb_buff[0]代表座椅地址  can_hb_buff[1]代表心跳信号  can_hb_buff[2]代表验证码*/	
-			if(can_rx_table[HEART_MSG].flag==1)
-			{
-				can_send(HEART_BEAT_ID+status.id,can_hb_buff, 8);
-			}	
+//			if(can_rx_table[HEART_MSG].flag==1)
+//			{
+//				can_send(HEART_BEAT_ID+status.id,can_hb_buff, 8);
+//			}	
 //			if(index==3) 
 //			{
 				update_flag=1;
-			  can_or_485=0; 
-//			}	
-			can_rx_table[index].can_rx();
-			can_rx_table[index].flag=0;
-			can_rx_table[index].count=0;
-			memcpy(can_rx_buff[index].data,hcan.pRxMsg->Data,8);
-		}	
-		if(can_rx_table[index].flag!=1)
-		{
-			can_rx_table[index].count++;
-		}	
-		if(can_rx_table[index].count>=can_rx_table[index].timeout)
-		{
-			can_rx_table[index].timeout_process();
-		}		
-	}
+				memcpy(can_rx_buff[0].data,hcan.pRxMsg->Data,8);
+//			  can_or_485=0; 
+////			}	
+//			can_rx_table[index].can_rx();
+//			can_rx_table[index].flag=0;
+//			can_rx_table[index].count=0;
+//			memcpy(can_rx_buff[index].data,hcan.pRxMsg->Data,8);
+//		}	
+//		if(can_rx_table[index].flag!=1)
+//		{
+//			can_rx_table[index].count++;
+//		}	
+//		if(can_rx_table[index].count>=can_rx_table[index].timeout)
+//		{
+//			can_rx_table[index].timeout_process();
+//		}		
+//	}
 }
 
 /*获取CAN数据的更新位*/

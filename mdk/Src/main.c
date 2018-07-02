@@ -600,7 +600,7 @@ int main(void)
 		exti_interrupt_filter();
 #endif		
 		sw_timer_handle();	
-		can_rx_handle(); 
+//		can_rx_handle(); 
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -630,22 +630,22 @@ int main(void)
 			}
 #endif
 ///////////////////////////////////////////////////////////////////	
-		if(!can_or_485)
-		{
+//		if(!can_or_485)
+//		{
 			uint8_t msg_buff_l[8]={0};
 	    uint8_t a,b,c;
-			get_high_speed_date(HIGHT_MSG_P,msg_buff_l);       
-			get_high_speed_date(ENV_SP_P,&a);
-			get_high_speed_date(SEAT_ID_P,&b);
-			get_high_speed_date(SEAT_SP_P,&c);
+			SAFE(get_high_speed_date(HIGHT_MSG_P,msg_buff_l));       
+//			SAFE(get_high_speed_date(ENV_SP_P,&a));
+//			SAFE(get_high_speed_date(SEAT_ID_P,&b));
+//			SAFE(get_high_speed_date(SEAT_SP_P,&c));
       
-			frame.buff[4]=msg_buff_l[0];
-			frame.buff[3]=msg_buff_l[1];
-			frame.buff[2]=msg_buff_l[2];
+			SAFE(frame.buff[4]=msg_buff_l[2]);
+			SAFE(frame.buff[3]=msg_buff_l[1]);
+			SAFE(frame.buff[2]=msg_buff_l[0]);
 			
-			frame.buff[5]=c;
-			frame.buff[7]=b;
-		}
+			SAFE(frame.buff[5]=msg_buff_l[4]);
+			SAFE(frame.buff[7]=msg_buff_l[5]);
+//		}
 			////////////////////////////////////////////////////////////
 		
 			if(status.seat_enable) /* ×ùÒÎÊ¹ÄÜ */
