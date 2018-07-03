@@ -1,10 +1,11 @@
 #include "user_can.h"
 #include "user_config.h"
 #include "user_time.h"
+#include <string.h>
 
 CanTxMsgTypeDef txmessage;
 CanRxMsgTypeDef rxmessage;
-
+can_rx_data can_rx_buff[CAN_RX_MAX_NUM]={0}; 
 static void can_txconfig()
 {
   hcan.pTxMsg=&txmessage;
@@ -83,6 +84,7 @@ void user_can_init(void)
 	can_scale32_idmask(1);  
 	CAN1->MCR|=(1<<6);
  	HAL_CAN_Receive_IT(&hcan,CAN_FIFO0);
+	memset((void *)&can_rx_buff,0,sizeof(can_rx_buff));
 }
 
 /**

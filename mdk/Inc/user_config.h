@@ -4,7 +4,7 @@
 #include "stm32f1xx_hal.h"
 
 //#define DEBUG_ENV	//调试模式
-//#define ENV_IWDG
+#define ENV_IWDG
 
 
 

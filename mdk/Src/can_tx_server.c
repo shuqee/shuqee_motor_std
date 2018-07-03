@@ -84,7 +84,7 @@ void can_tx_servet_init(void)
 void task_can_tx(void)
 {
 	CAN1->IER|=(1<<1); //确保CAN可以在线热插拔；
-	LED_UP_LIMIT1_TOGGLE();
+//	LED_UP_LIMIT1_TOGGLE();
 	can_tx_handle(); 
 }
 
@@ -124,15 +124,6 @@ void set_nm_msg(uint8_t *tx_data)
 /********************************CAN接收模块的编写********************************************/
 /****↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓↓*******/
 
-typedef enum 
-{
-	HIGHT_MSG=0,  //高度ID
-	SPEED_MSG,					//速度ID
-	SP_MSG,					  //特效ID	
-	HEART_MSG,
-	CAN_RX_MAX_NUM
-} can_rx_msg_t;
-
 typedef struct
 {
 	uint16_t msg_id;        //接收的ID号
@@ -144,14 +135,6 @@ typedef struct
 }can_rx_item_t;
 
 can_rx_item_t can_rx_table[CAN_RX_MAX_NUM]={0};
-
-typedef struct
-{
-	uint8_t data[8];
-}can_rx_data;
-
-/*init*/
-can_rx_data can_rx_buff[CAN_RX_MAX_NUM]={0};
 
 uint16_t msg_id_mapping[CAN_RX_MAX_NUM]=
 {
@@ -258,7 +241,7 @@ void can_rx_handle(void)
 //			{
 				update_flag=1;
 				memcpy(can_rx_buff[0].data,hcan.pRxMsg->Data,8);
-//			  can_or_485=0; 
+			  SAFE(can_or_485=0); 
 ////			}	
 //			can_rx_table[index].can_rx();
 //			can_rx_table[index].flag=0;

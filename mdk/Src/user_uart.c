@@ -50,7 +50,7 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 			case 0xee:
 				frame.enable = 1;
 				frame.index = 0;
-			  can_or_485=1;
+			  SAFE(can_or_485=1);
 				break;
 			default :
 				frame.index = 0;

@@ -73,7 +73,6 @@ struct motion_status motion[MOTION_COUNT] = {MOTION1};
 struct status status = {0};
 int flag_rst = 0;	//reset flag
 
-
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -90,7 +89,9 @@ static void MX_CAN_Init(void);
 
 /* USER CODE BEGIN PFP */
 /* Private function prototypes -----------------------------------------------*/
+#ifdef DIRNA		
 static void exti_interrupt_filter(void);
+#endif
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -630,8 +631,8 @@ int main(void)
 			}
 #endif
 ///////////////////////////////////////////////////////////////////	
-//		if(!can_or_485)
-//		{
+		if(!can_or_485)
+		{
 			uint8_t msg_buff_l[8]={0};
 	    uint8_t a,b,c;
 			SAFE(get_high_speed_date(HIGHT_MSG_P,msg_buff_l));       
@@ -645,7 +646,7 @@ int main(void)
 			
 			SAFE(frame.buff[5]=msg_buff_l[4]);
 			SAFE(frame.buff[7]=msg_buff_l[5]);
-//		}
+		}
 			////////////////////////////////////////////////////////////
 		
 			if(status.seat_enable) /* ×ùÒÎÊ¹ÄÜ */

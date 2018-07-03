@@ -22,6 +22,22 @@ typedef enum
 	SEAT_SP_P
 } can_msg_choose_t;
 
+typedef enum 
+{
+	HIGHT_MSG=0,  //高度ID
+	SPEED_MSG,					//速度ID
+	SP_MSG,					  //特效ID	
+	HEART_MSG,
+	CAN_RX_MAX_NUM
+} can_rx_msg_t;
+
+typedef struct
+{
+	uint8_t data[8];
+}can_rx_data;
+
+/*init*/
+extern can_rx_data can_rx_buff[CAN_RX_MAX_NUM];
 
 extern void user_can_init(void);
 extern void can_send(uint16_t msg_id, uint8_t *data, uint16_t len);
