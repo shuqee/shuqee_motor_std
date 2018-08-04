@@ -2,6 +2,9 @@
 #define __USER_CAN_H
 #include "stm32f1xx_hal.h"
 
+#define UP_GOTO 0
+#define DOWN_GOTO 1
+
 typedef enum 
 {
 	STATUS_MSG_ID = 0x0,

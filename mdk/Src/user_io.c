@@ -205,7 +205,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.uplimit[MOTION1])	//消除抖动的判断
 				{
 					status.uplimit[MOTION1] = 1;	//消除抖动的操作
-					up_limit(MOTION1);	
+#ifndef DIRNA
+					up_limit(MOTION1);
+#endif					
 					Uplimit1(1);
 				}
 			}
@@ -222,7 +224,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.downlimit[MOTION1])
 				{
 					status.downlimit[MOTION1] = 1;
-					down_limit(MOTION1);			
+#ifndef DIRNA
+					down_limit(MOTION1);
+#endif					
 					Downlimit1(1);
 				}
 			}
@@ -239,8 +243,10 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.uplimit[MOTION2])
 				{
 					status.uplimit[MOTION2] = 1;
-					up_limit(MOTION2);	
-					Uplimit2(1);
+#ifndef DIRNA
+					up_limit(MOTION2);
+#endif					
+//					Uplimit2(1);
 				}
 			}
 			else
@@ -248,7 +254,7 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(status.uplimit[MOTION2])
 				{
 					status.uplimit[MOTION2] = 0;
-					Uplimit2(0);
+//					Uplimit2(0);
 				}
 			}
 			break;
@@ -258,15 +264,17 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.downlimit[MOTION2])
 				{
 					status.downlimit[MOTION2] = 1;
-					down_limit(MOTION2);			
-					Downlimit2(1);
+#ifndef DIRNA
+					down_limit(MOTION2);
+#endif					
+//					Downlimit2(1);
 				}
 			}
 			else
 			{
-				 if(status.downlimit[MOTION2])
-				 status.downlimit[MOTION2] = 0;
-				 Downlimit2(0);
+				if(status.downlimit[MOTION2])
+					status.downlimit[MOTION2] = 0;
+//				 Downlimit2(0);
 			}
 			break;	
 		case EXTI_UPLIMIT3_Pin:
@@ -275,7 +283,9 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.uplimit[MOTION3])
 				{
 					status.uplimit[MOTION3] = 1;
-					up_limit(MOTION3);	
+#ifndef DIRNA
+					up_limit(MOTION3);
+#endif					
 					Uplimit3(1);
 				}
 			}
@@ -294,14 +304,16 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 				if(!status.downlimit[MOTION3])
 				{
 					status.downlimit[MOTION3] = 1;
-					down_limit(MOTION3);			
+#ifndef DIRNA
+					down_limit(MOTION3);
+#endif					
 					Downlimit3(1);
 				}
 			}
 			else
 			{
 				if(status.downlimit[MOTION3])
-				status.downlimit[MOTION3] = 0;					
+					status.downlimit[MOTION3] = 0;					
 				Downlimit3(0);
 			}
 			break;	

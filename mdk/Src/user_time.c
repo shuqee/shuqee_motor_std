@@ -1,6 +1,7 @@
 #include "stm32f1xx_hal.h"
 #include "user_config.h"
 #include "user_time.h"
+#include "user_io.h"
 
 void user_time_init(void)
 {
@@ -74,20 +75,52 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	int now;
 	int set;
 	static uint32_t interval = 999;
-	if(htim->Instance == TIM1)	//判断是哪个定时器中断
-		index = MOTION1;	//取出对应缸状态记录空间的指针
-	else{if(htim->Instance == TIM2)
+	
+	if(htim->Instance == TIM6)
+	{
+		shark.time_count++;  //加10MS;
+	  if(shark.time_count <=shark.period)  //认为到时间改变高度值；
+		{ 
+				SAFE(motion[MOTION1].high.set = shark.real_am_high[0]* ENV_SPACE); /* 更新目标位置 */
+				SAFE(motion[MOTION2].high.set = shark.real_am_high[1] * ENV_SPACE); /* 更新目标位置 */
+				SAFE(motion[MOTION3].high.set = shark.real_am_high[2]* ENV_SPACE); /* 更新目标位置 */	
+				Uplimit3(1);
+		}	
+	  else if((shark.time_count <2*shark.period)&&(shark.time_count >shark.period))  //认为到时间改变高度值；
+		{ 
+				SAFE(motion[MOTION1].high.set =status.record_point_position[0]* ENV_SPACE); /* 更新目标位置 */
+				SAFE(motion[MOTION2].high.set = status.record_point_position[1] * ENV_SPACE); /* 更新目标位置 */
+				SAFE(motion[MOTION3].high.set = status.record_point_position[2] * ENV_SPACE); /* 更新目标位置 */	
+				Uplimit3(0);
+		}		
+		else if(shark.time_count >=2*shark.period)
+    {
+			shark.time_count =0;
+		}			
+	}
+	 if(htim->Instance == TIM1)	//判断是哪个定时器中断
+	 {
+		index = MOTION1;	//取出对应缸状态记录空间的指针  
+	  LED_UP_LIMIT1_TOGGLE();
+	 }
+	else if(htim->Instance == TIM2)
+	{
 		index = MOTION2;
-	else{if(htim->Instance == TIM3)
-		index = MOTION3;
-	else
+		LED_DOWN_LIMIT1_TOGGLE();
+	}
+	else if(htim->Instance == TIM3)
+	{
+		index = MOTION3;	
+    LED_UP_LIMIT2_TOGGLE();
+	}	
+	else  
 		return;
-	}}
+	
 	SAFE(now = motion[index].high.now);
 	set = motion[index].high.set;
 	if(now == set)	//当前缸位置与设定缸目标位置一致，不做操作直接返回
 	{
-		interval = 999;
+		interval = 999;  //999
 		__HAL_TIM_SET_AUTORELOAD(htim, interval);
 //		/*监控上位机脉冲发送量*/
 //		if(motion[index].high.printf_flag==0)
@@ -108,7 +141,10 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 	{
 		interval =  (ENV_ACCER)/(now-set);
 	}
-//	 interval=interval*1.8;
+	if(shark.shark_flag)  //进入震动模式
+	{
+		interval=25;
+	}	
 	interval = (interval<ENV_SPEED_MAX)?ENV_SPEED_MAX:interval;
 	__HAL_TIM_SET_AUTORELOAD(htim, interval);
 	SAFE(motion[index].high.now += output_pul(index, (now < set)?GPIO_PIN_RESET:GPIO_PIN_SET));	//计算步数

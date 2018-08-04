@@ -47,6 +47,7 @@
 #include "user_uart.h"
 #include "user_can.h"
 #include "sw_timer.h"
+#include "sw_timer.h"
 
 #include <string.h>
 
@@ -63,6 +64,7 @@ IWDG_HandleTypeDef hiwdg;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim3;
+TIM_HandleTypeDef htim6;
 
 UART_HandleTypeDef huart1;
 
@@ -86,12 +88,11 @@ static void MX_TIM3_Init(void);
 static void MX_USART1_UART_Init(void);
 static void MX_IWDG_Init(void);
 static void MX_CAN_Init(void);
+static void MX_TIM6_Init(void);
 
 /* USER CODE BEGIN PFP */
-/* Private function prototypes -----------------------------------------------*/
-#ifdef DIRNA		
+/* Private function prototypes -----------------------------------------------*/	
 static void exti_interrupt_filter(void);
-#endif
 /* USER CODE END PFP */
 
 /* USER CODE BEGIN 0 */
@@ -500,11 +501,13 @@ void exti_interrupt_filter(void)
 	}
  }	
 }
+
 #endif
 /* USER CODE END 0 */
 
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 	static int led_count = 0;
 #ifdef ENV_SEAT_PICKING
@@ -546,8 +549,9 @@ int main(void)
   MX_TIM2_Init();
   MX_TIM3_Init();
   MX_USART1_UART_Init();
-  MX_IWDG_Init();	
+  MX_IWDG_Init();
   MX_CAN_Init();
+  MX_TIM6_Init();
 
   /* USER CODE BEGIN 2 */
 #else
@@ -559,6 +563,7 @@ int main(void)
   MX_TIM1_Init();
   MX_TIM2_Init();
   MX_TIM3_Init();
+	MX_TIM6_Init();	
   MX_USART1_UART_Init();
 	MX_CAN_Init();
   /* MX_IWDG_Init(); */
@@ -601,7 +606,6 @@ int main(void)
 		exti_interrupt_filter();
 #endif		
 		sw_timer_handle();	
-//		can_rx_handle(); 
 #ifdef ENV_IWDG
 		HAL_IWDG_Refresh(&hiwdg);
 #endif
@@ -633,40 +637,40 @@ int main(void)
 ///////////////////////////////////////////////////////////////////	
 		if(!can_or_485)
 		{
-			uint8_t msg_buff_l[8]={0};
-	    uint8_t a,b,c;
-			SAFE(get_high_speed_date(HIGHT_MSG_P,msg_buff_l));       
-//			SAFE(get_high_speed_date(ENV_SP_P,&a));
-//			SAFE(get_high_speed_date(SEAT_ID_P,&b));
-//			SAFE(get_high_speed_date(SEAT_SP_P,&c));
-      
-			SAFE(frame.buff[4]=msg_buff_l[2]);
-			SAFE(frame.buff[3]=msg_buff_l[1]);
-			SAFE(frame.buff[2]=msg_buff_l[0]);
-			
-			SAFE(frame.buff[5]=msg_buff_l[4]);
-			SAFE(frame.buff[7]=msg_buff_l[5]);
+//			uint8_t msg_buff_l[8]={0};
+////	  uint8_t a,b,c;
+//			SAFE(get_high_speed_date(HIGHT_MSG_P,msg_buff_l));       
+////			SAFE(get_high_speed_date(ENV_SP_P,&a));
+////			SAFE(get_high_speed_date(SEAT_ID_P,&b));
+////			SAFE(get_high_speed_date(SEAT_SP_P,&c));
+//      
+//			SAFE(frame.buff[4]=msg_buff_l[2]);
+//			SAFE(frame.buff[3]=msg_buff_l[1]);
+//			SAFE(frame.buff[2]=msg_buff_l[0]);
+//			
+//			SAFE(frame.buff[5]=msg_buff_l[4]);
+//			SAFE(frame.buff[7]=msg_buff_l[5]);
 		}
 			////////////////////////////////////////////////////////////
 		
 			if(status.seat_enable) /* 座椅使能 */
 			{
 				SAFE(status.spb = frame.buff[5]); /* 更新特效 */
-#ifdef MOTION1_ENABLE
-				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* 更新目标位置 */
-#else
-				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* 恢复目标位置 */
-#endif
-#ifdef MOTION2_ENABLE
-				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* 更新目标位置 */
-#else
-				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* 恢复目标位置 */
-#endif
-#ifdef MOTION3_ENABLE
-				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* 更新目标位置 */
-#else
-				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* 恢复目标位置 */
-#endif
+//#ifdef MOTION1_ENABLE
+//				SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* 更新目标位置 */
+//#else
+//				SAFE(motion[MOTION1].high.set = motion[MOTION1].config.origin * ENV_SPACE); /* 恢复目标位置 */
+//#endif
+//#ifdef MOTION2_ENABLE
+//				SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* 更新目标位置 */
+//#else
+//				SAFE(motion[MOTION2].high.set = motion[MOTION2].config.origin * ENV_SPACE); /* 恢复目标位置 */
+//#endif
+//#ifdef MOTION3_ENABLE
+//				SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* 更新目标位置 */
+//#else
+//				SAFE(motion[MOTION3].high.set = motion[MOTION3].config.origin * ENV_SPACE); /* 恢复目标位置 */
+//#endif
 			}
 			else
 			{
@@ -1043,6 +1047,31 @@ static void MX_TIM3_Init(void)
   sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
   sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
   if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+}
+
+/* TIM6 init function */
+static void MX_TIM6_Init(void)
+{
+
+  TIM_MasterConfigTypeDef sMasterConfig;
+
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 719;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 999;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    _Error_Handler(__FILE__, __LINE__);
+  }
+
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
   {
     _Error_Handler(__FILE__, __LINE__);
   }

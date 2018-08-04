@@ -5,7 +5,7 @@
 
 //#define DEBUG_ENV	//调试模式
 #define ENV_IWDG
-
+#define ENV_24V_SENOR
 
 
 #define ENV_3DOF_NO_SENSOR	 //三自由度平台不带传感器
@@ -16,9 +16,10 @@
 //#define ENV_SEAT_PICKING //选座功能(根据ID使能座椅)
 //#define ENV_SEND_SEAT_INFO //统计人数功能(根据ID使能反馈座椅人数功能)
 
+
 #ifdef ENV_3DOF_NO_SENSOR
-  #define SYNERON     //和利时驱动器
-//	#define DIRNA       //东菱驱动器
+//  #define SYNERON     //和利时驱动器
+	#define DIRNA       //东菱驱动器
 	#define ENV_NOSENSOR	//没有传感器
 	#define ENV_RESET	//复位
 	#define MOTION1_ENABLE
@@ -75,8 +76,10 @@
 //	#define ENV_SPACE 46                  //位置扩大倍数为2的ENV_SPACE次方
 	/* 150cm行程的时候ENV_SPACE取40 */ 
 	
-	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
+	#define ENV_SPEED_MAX 25        //最大速度对应的定时器重载值
 	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)	
+//	#define ENV_SPEED_MAX 32        //最大速度对应的定时器重载值
+//	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)6)	
 	#endif
 	/*↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑↑*/	
 #endif
@@ -100,7 +103,7 @@
   #define ENV_SPACE 70             //东菱驱动器
 	#define ENV_SPEED_MAX 37        //最大速度对应的定时器重载值
 	/* 中速 */
-	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)20)
+	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)12)
 	/* 高速 */
 //	#define ENV_ACCER     (ENV_SPACE * (uint32_t)256 * (uint32_t)8)
 	#define ENV_RESET_SPEED 200 //ENV_RESET_SPEED越大复位速度越慢
@@ -189,12 +192,28 @@ struct status
 	uint32_t downlimit_count_time[MOTION_COUNT]; 
 	uint8_t protection_up_flag[MOTION_COUNT];
 	uint8_t protection_down_flag[MOTION_COUNT];
+	uint8_t record_point_position[MOTION_COUNT];
 };
 
-
+struct shark
+{
+	uint8_t am;   //振幅
+	uint8_t real_am_high[3];
+	uint8_t period;
+	uint8_t shark_flag;
+	uint8_t time_count;
+	uint8_t rec_high_flag;
+	uint8_t route_flag;
+	uint8_t motion_dir[3];
+	uint8_t error_high[3];
+	uint8_t mark_before_am;
+	uint8_t mark_befor_period;
+};
+extern struct shark shark;
 extern TIM_HandleTypeDef htim1;
 extern TIM_HandleTypeDef htim2;
 extern TIM_HandleTypeDef htim3;
+extern TIM_HandleTypeDef htim6; 
 extern CAN_HandleTypeDef hcan;
 extern struct motion_status motion[MOTION_COUNT];
 extern struct status status;

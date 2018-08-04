@@ -222,10 +222,12 @@ void can_rx_init(void)
 }	
 static uint8_t update_flag;
 uint8_t can_hb_buff[8]={0,0x01,0x55};
-
-
+uint8_t msg_buff_l[8]={0};
+struct shark shark;
 void can_rx_handle(void)
 {
+	uint8_t i;
+	uint8_t up_flag=0,down_flag=0;
 //	can_rx_msg_t index;
 //	for(index = HIGHT_MSG;index < CAN_RX_MAX_NUM;index++)
 //	{
@@ -239,9 +241,116 @@ void can_rx_handle(void)
 //			}	
 //			if(index==3) 
 //			{
-				update_flag=1;
-				memcpy(can_rx_buff[0].data,hcan.pRxMsg->Data,8);
-			  SAFE(can_or_485=0); 
+			
+//		memcpy(can_rx_buff[0].data,hcan.pRxMsg->Data,8);     
+      memcpy(msg_buff_l,hcan.pRxMsg->Data,8);  
+			SAFE(frame.buff[4]=msg_buff_l[2]);
+			SAFE(frame.buff[3]=msg_buff_l[1]);
+			SAFE(frame.buff[2]=msg_buff_l[0]);
+			
+			SAFE(frame.buff[5]=msg_buff_l[4]);
+			SAFE(frame.buff[7]=msg_buff_l[5]);
+			/*msg_buff_l[6]振幅；msg_buff_l[7]time*/
+			if((msg_buff_l[6]==0)&&(msg_buff_l[7]==0))  //振幅，频率有一个为零接收当前的运动状态；
+			{
+					SAFE(motion[MOTION1].high.set = frame.buff[4] * ENV_SPACE); /* 更新目标位置 */
+					SAFE(motion[MOTION2].high.set = frame.buff[3] * ENV_SPACE); /* 更新目标位置 */
+					SAFE(motion[MOTION3].high.set = frame.buff[2] * ENV_SPACE); /* 更新目标位置 */	
+					SAFE(shark.shark_flag =0);
+					HAL_TIM_Base_Stop_IT(&htim6);
+					SAFE(can_or_485=0); 
+					SAFE(shark.rec_high_flag =0);
+			}
+			else
+			{
+				if((shark.mark_before_am!=msg_buff_l[6])||(shark.mark_befor_period!=msg_buff_l[7]))
+				shark.rec_high_flag =0;	
+				SAFE(update_flag=1);
+				SAFE(shark.shark_flag =1);
+				if(shark.rec_high_flag == 0)  //处理接收进来的震动数据；
+				{
+					shark.rec_high_flag=1;
+					shark.am=msg_buff_l[6];
+					shark.period=msg_buff_l[7];
+					shark.mark_before_am=msg_buff_l[6];
+					shark.mark_befor_period=msg_buff_l[7];
+					shark.am = (shark.am>40)?40:shark.am;
+					for(i=0;i<3;i++)
+					{
+					  status.record_point_position[i]=motion[i].high.now/ENV_SPACE;   //保存当前高度，做判断；
+						if(status.record_point_position[i]<127)  // 判断当前的位置偏移方向；
+						{
+							shark.error_high [i]=status.record_point_position[i];
+							if(shark.error_high [i]<shark.am )   //判断当前的间隔来决定上下行；
+							{
+								up_flag++; 
+								shark.motion_dir[i] = UP_GOTO;							
+							}
+							else
+							{
+								down_flag++;
+								shark.motion_dir[i] = DOWN_GOTO;
+							}	
+						}	
+						else
+						{
+							shark.error_high [i]=255-status.record_point_position[i];
+							if(shark.error_high [i]<shark.am )   //判断当前的间隔来决定上下行；
+							{
+								down_flag++; 
+								shark.motion_dir[i] = DOWN_GOTO;							
+							}
+							else
+							{
+								up_flag++;
+								shark.motion_dir[i] = UP_GOTO;
+							}								
+						}				
+					}
+						if(down_flag<up_flag)   //圈圈
+						{
+							shark.route_flag=UP_GOTO;
+						}	
+						else
+						{
+							shark.route_flag =DOWN_GOTO;
+						}		
+						for(i=0;i<3;i++)  //处理最后输出的数据；
+						{
+							if(shark.motion_dir[i] != shark.route_flag )
+							{
+								if(shark.route_flag ==UP_GOTO)
+								{
+									if((255-status.record_point_position[i])<shark.am)
+									{
+										shark.am=(255-status.record_point_position[i]);
+									}
+										shark.real_am_high[i] =status.record_point_position[i]+shark.am; 
+								}
+								else
+								{
+									if((status.record_point_position[i])<shark.am)
+									{
+										shark.am=status.record_point_position[i];
+									}
+										shark.real_am_high[i] =status.record_point_position[i]-shark.am; 
+								}																	
+							}	
+						}
+							for(i=0;i<3;i++)   //重新整理
+							{
+									if(shark.route_flag ==UP_GOTO)
+									{
+											shark.real_am_high[i] =status.record_point_position[i]+shark.am; 
+									}
+									else
+									{
+											shark.real_am_high[i] =status.record_point_position[i]-shark.am; 
+									}								
+							}
+				}
+				HAL_TIM_Base_Start_IT(&htim6);				
+			}			
 ////			}	
 //			can_rx_table[index].can_rx();
 //			can_rx_table[index].flag=0;
@@ -322,3 +431,4 @@ void get_high_speed_date(uint16_t msg_addr,uint8_t * pData)
 			   break;
 	}	
 }
+

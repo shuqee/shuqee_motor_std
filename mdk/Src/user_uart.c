@@ -7,6 +7,7 @@ extern UART_HandleTypeDef huart1;
 
 struct frame frame = {0};
 uint8_t can_or_485=0;
+extern CAN_HandleTypeDef hcan;
 void user_uart_init(void)
 {
 	memset((void *)&frame, 0, sizeof(frame));
